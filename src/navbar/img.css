@@ -1,0 +1,28 @@
+.content {
+    display: flex;
+    align-content: center;
+    text-align: center;
+}
+.lol_img {
+    width:150px;
+    height:150px;
+    margin-left: 50px;
+    padding: 30px;
+}
+.sudden {
+    width:250px;
+    height:auto;
+    padding: 50px;
+    margin-left: 40px;
+}
+
+.lol_img, .sudden {
+    transition: transform 0.5s, box-shadow 0.5s;
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+.lol_img:hover, .sudden:hover {
+    transform: scale(1.2);
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.7);
+}
