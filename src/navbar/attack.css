@@ -1,0 +1,66 @@
+.search-container {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.search-wrapper {
+    position: relative;
+    display: inline-block;
+    float: right;
+    margin-right: 50px;
+
+}
+.search-icon {
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    transform: translateY(-50%);
+    cursor: pointer;
+    width: 20px;
+    height: 20px;
+}
+#attack_title {
+    margin-left: 50px;
+    padding: 20px;
+    margin-top: 50px;
+}
+/* attack.css */
+
+/* 게시글 스타일 */
+.posts {
+    list-style-type: none;
+    padding: 10px;
+    width: 100%;
+    margin-top: 50px;
+    text-align: left;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.post {
+    border: 1px solid #ccc;
+    border-left: none;
+    border-right: none;
+    margin: 0 auto 20px;
+    position: relative;
+    padding-left: 50px; /* 숫자의 가로 길이 만큼 제목에 여백을 주기 위해 설정 */
+}
+
+.post-number {
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #666;
+    font-size: 16px;
+    margin-left: 10px;
+
+}
+
+.post h4 {
+    color: #333;
+    font-size: 15px;
+    margin-bottom: 20px;
+    margin-left: -20px;
+}
