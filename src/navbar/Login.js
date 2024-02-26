@@ -53,7 +53,7 @@ function Login({ history }) {
                     <div className="divider"></div>
                 </div>
                 <button className="kakao-btn" onClick={() => alert("Kakao Login")}>
-                    <img src={require('../img/kakao_login.png')} alt="Kakao Login"/>
+                    {/*<img src={require('public/kakao_login.png')} alt="Kakao Login"/>*/}
                 </button>
             </div>
             <div className="signup-text">
