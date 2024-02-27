@@ -5,8 +5,7 @@ import Main from './navbar/Main';
 import Attack from './navbar/Attack';
 import Login from './navbar/Login';
 import RoomList from './components/RoomList';
-import lolLogo from "./img/lol-logo.png";
-import suddenLogo from "./img/sudden.webp";
+import MainGameComponents from "./components/MainGameComponents";
 
 function App() {
     return (
@@ -14,10 +13,11 @@ function App() {
             <div className="App">
                 <Nav />
                 <Routes>
-                    <Route path="/" element={<Main logo={lolLogo} gameName="리그오브레전드" />}/>
-                    <Route path="/about" element={<Attack logo={suddenLogo} gameName="서든어택" />}/>
+                    <Route path="/" element={<Main />}/>
+                    <Route path="/about" element={<Attack />}/>
                     <Route path="/contact" element={<Login />}/>
                     <Route path="/RoomList" element={<RoomList />}/>
+                    <Route path="/:gameName" element={<MainGameComponents />}/>
                 </Routes>
             </div>
         </BrowserRouter>

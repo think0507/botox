@@ -1,8 +1,8 @@
+// Main.js
 import React from 'react';
 import './main.css';
 import './img.css';
-import { Link, Routes, Route } from 'react-router-dom'; // react-router-dom에서 Link import
-import MainGameComponents from "../components/MainGameComponents";
+import { Link } from 'react-router-dom'; // react-router-dom에서 Link import
 import lolLogo from "../img/lol-logo.png";
 import suddenLogo from "../img/sudden.webp";
 
@@ -23,10 +23,6 @@ function Main() {
                 <p className="lol_text">리그오브레전드</p>
                 <p className="sudden_text">서든어택</p>
             </div>
-            <Routes>
-                <Route path="/lol" element={<MainGameComponents gameName="리그오브레전드" />} />
-                <Route path="/sudden" element={<MainGameComponents gameName="서든어택" />} />
-            </Routes>
         </div>
     );
 }

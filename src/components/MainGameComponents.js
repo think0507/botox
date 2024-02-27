@@ -1,22 +1,21 @@
 // MainGameComponents.js
-
 import React from 'react';
+import { useParams } from 'react-router-dom';
 
-function MainGameComponents({ match }) {
-    const { game } = match.params; // URL에서 게임 이름을 가져옴
+function MainGameComponents() {
+    // URL 파라미터를 가져옵니다.
+    const { gameName } = useParams();
 
-    let gameContent;
-    if (game === 'lol') {
-        gameContent = <h2>리그오브레전드 컴포넌트</h2>;
-    } else if (game === 'sudden') {
-        gameContent = <h2>서든어택 컴포넌트</h2>;
-    } else {
-        gameContent = <h2>게임을 선택하세요.</h2>;
-    }
+    // 게임 이름에 따른 정보를 설정합니다.
+    const gameInfo = {
+        'lol': '리그오브레전드에 대한 정보',
+        'sudden': '서든어택에 대한 정보',
+    };
 
     return (
         <div>
-            {gameContent}
+            <h2>{gameName}</h2>
+            <p>{gameInfo[gameName]}</p>
         </div>
     );
 }
