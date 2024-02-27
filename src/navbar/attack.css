@@ -8,7 +8,11 @@
     display: inline-block;
     float: right;
     margin-right: 50px;
-
+}
+.search-input {
+    width: 300px;
+    padding: 15px;
+    font-size: 16px;
 }
 .search-icon {
     position: absolute;
