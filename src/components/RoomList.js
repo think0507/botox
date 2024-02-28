@@ -95,23 +95,23 @@ function RoomList() {
             {/*    방 목록 리스트 */}
             <div className={'roomListContentContainer'}>
                 <div className={'roomListContent'}>
-                    <div className={'content'}>
+                    <div className={'roomContent'}>
                         {/*    방번호*/}
                         roomNum
                     </div>
-                    <div className={'content'}>
+                    <div className={'roomContent'}>
                         {/*    방 제목 */}
                         roomName
                     </div>
-                    <div className={'content'}>
+                    <div className={'roomContent'}>
                         {/*    현재 인원수*/}
                         peoplecount
                     </div>
-                    <div className={'content'}>
+                    <div className={'roomContent'}>
                         {/*    평균온도 */}
                         degreeAvg
                     </div>
-                    <div className={'content'}>
+                    <div className={'roomContent'}>
                         {/*    잠금 여부 */}
                         islocked
                     </div>

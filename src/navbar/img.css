@@ -11,9 +11,9 @@
 }
 .sudden {
     width:250px;
-    height:auto;
-    padding: 50px;
-    margin-left: 40px;
+    height:150px;
+    padding: 30px;
+    margin-left: 60px;
 }
 
 .lol_img, .sudden {
@@ -25,4 +25,56 @@
 .lol_img:hover, .sudden:hover {
     transform: scale(1.2);
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.7);
+}
+
+/* 이미지와 제목 컨테이너에 대한 스타일 */
+.image-container {
+    position: relative;
+}
+
+/* 제목 스타일 */
+.title-overlay {
+    position: absolute;
+    width: 50%;
+    bottom: 5px;
+    left: 60%;
+    transform: translateX(-50%);
+    background-color: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 5px;
+    opacity: 0;
+    transition: opacity 0.5s;
+}
+
+/* 호버 시 제목 보이도록 설정 */
+.image-container:hover .title-overlay {
+    opacity: 1;
+}
+
+/* 사용자 수 표시 스타일 */
+.lol_user_count, .sudden_user_count {
+    position: absolute;
+    bottom: -50px; /* 수정된 부분 */
+    width: 50%;
+    left: 60%;
+    transform: translateX(-50%);
+    background-color: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 5px;
+    opacity: 0;
+    transition: opacity 0.5s;
+}
+
+/* 호버 시 제목과 사용자 수 보이도록 설정 */
+.image-container:hover .title-overlay,
+.image-container:hover .lol_user_count,
+.image-container:hover .sudden_user_count{
+    opacity: 1;
+}
+
+.user-icon {
+    width: 20px;
+    height: auto;
 }
