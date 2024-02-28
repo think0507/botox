@@ -1,0 +1,65 @@
+.userIcon{
+    width:100px;
+    height:100px;
+}
+.roomListContentContainer{
+    width : 90vw;
+    height : 70vh;
+    border:solid 3px black;
+
+}
+.roomListContent{
+    margin : 10px;
+    display : flex;
+}
+.checkBoxContainer{
+    display : flex;
+    margin : 30px;
+}
+.checkBox{
+    transform : scale(2);
+}
+.roomListNav{
+    display:flex;
+}
+.createRoomButton{
+    width : 500px;
+}
+.content{
+    padding : 10px;
+    margin : 20px;
+    border : solid 3px black;
+}
+
+
+
+/* 모달 CSS */
+.btn-wrapper {
+    display: flex;
+    justify-content: center;
+    margin-top: 5rem;
+}
+
+.modal-open-button, .modal-close-btn {
+    cursor: pointer;
+    margin-left: auto;
+}
+
+.modal-container {
+    width: 100%;
+    height: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+    background-color: #ffffff;
+    width: 250px;
+    height: 150px;
+    padding: 15px;
+}
