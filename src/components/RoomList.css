@@ -11,6 +11,7 @@
 .roomListContent{
     margin : 10px;
     display : flex;
+    border : solid black 3px;
 }
 .checkBoxContainer{
     display : flex;
@@ -25,15 +26,16 @@
 .createRoomButton{
     width : 500px;
 }
-.content{
+.roomContent{
     padding : 10px;
     margin : 20px;
     border : solid 3px black;
 }
+.roomListContent:hover{
+    background : gray;
+}
 
-
-
-/* 모달 CSS */
+/* ===== 모달 CSS ===== */
 .btn-wrapper {
     display: flex;
     justify-content: center;
@@ -63,3 +65,4 @@
     height: 150px;
     padding: 15px;
 }
+/* ===== 모달 css 끝! =====*/
