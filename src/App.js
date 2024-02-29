@@ -6,6 +6,8 @@ import Attack from './navbar/Attack';
 import Login from './navbar/Login';
 import RoomList from './components/RoomList';
 import MainGameComponents from "./components/MainGameComponents";
+import TextChatRoom from "./components/TextChatRoom";
+import VoiceChatRoom from "./components/VoiceChatRoom";
 
 function App() {
     return (
@@ -18,6 +20,8 @@ function App() {
                     <Route path="/contact" element={<Login />}/>
                     <Route path="/RoomList" element={<RoomList />}/>
                     <Route path="/:gameName" element={<MainGameComponents />}/>
+                    <Route path="/TextChatRoom" element={<TextChatRoom />}/>
+                    <Route path="/VoiceChatRoom" element={<VoiceChatRoom />}/>
                 </Routes>
             </div>
         </BrowserRouter>
