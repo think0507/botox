@@ -1,0 +1,130 @@
+* {
+    margin: 0;
+    padding: 0;
+}
+
+.chat_wrap .header {
+    font-size: 14px;
+    padding: 15px 0;
+    background: #F18C7E;
+    color: white;
+    text-align: center;
+}
+
+.chat_wrap .chat {
+    height: calc(100vh - 150px);
+    overflow-y: auto;
+    padding-bottom: 80px;
+}
+
+.chat_wrap .chat ul {
+    width: 100%;
+    list-style: none;
+    padding: 0;
+}
+
+.chat_wrap .chat ul li {
+    width: 100%;
+}
+
+.chat_wrap .chat ul li.left {
+    text-align: left;
+}
+
+.chat_wrap .chat ul li.right {
+    text-align: right;
+}
+
+.chat_wrap .chat ul li > div {
+    font-size: 13px;
+}
+
+.chat_wrap .chat ul li > div.sender {
+    margin: 10px 20px 0 20px;
+    font-weight: bold;
+}
+
+.chat_wrap .chat ul li > div.message {
+    display: inline-block;
+    word-break: break-all;
+    margin: 5px 20px;
+    max-width: 75%;
+    border: 1px solid #888;
+    padding: 10px;
+    border-radius: 5px;
+    background-color: #FCFCFC;
+    color: #555;
+    text-align: left;
+}
+
+.chat_wrap .input-div {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    background-color: #FFF;
+    text-align: center;
+    border-top: 1px solid #F18C7E;
+}
+
+.chat_wrap .input-div > textarea {
+    width: calc(100% - 20px);
+    height: 80px;
+    border: none;
+    padding: 10px;
+    margin: 10px;
+}
+
+.format {
+    display: none;
+}
+
+.input-div {
+    display: flex;
+    align-items: center;
+    border-top: 1px solid #ccc;
+    padding: 10px;
+}
+
+.input-div textarea {
+    flex: 1;
+    border: none;
+    outline: none;
+    resize: none;
+    padding: 8px;
+    border-radius: 20px;
+    margin-right: 10px;
+    font-size: 16px;
+}
+
+.input-div button {
+    background-color: #ccc; /* 회색 */
+    color: black;
+    border: none;
+    padding: 30px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    border-radius: 20px;
+    margin-right: 30px;
+    cursor: pointer;
+    transition: background-color 0.3s; /* 배경색 전환 효과 */
+}
+
+.input-div button:hover {
+    background-color: #fff; /* 노란색일 때 호버 */
+    transition: background-color 0.3s; /* 호버 효과 */
+}
+
+.input-div textarea:focus + button {
+    background-color: #fff; /* 회색일 때 포커스가 있을 때 호버 */
+    transition: background-color 0.3s; /* 포커스 효과 */
+}
+
+.input-div textarea:focus + button:hover {
+    background-color: #ccc; /* 포커스가 있을 때 호버 시 어둡게 변화 */
+}
+
+
+
+

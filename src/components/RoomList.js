@@ -1,132 +1,137 @@
-import React, {useRef, useState} from 'react';
-import usericonURL from '../img/user-icon.png'
-import './RoomList.css'
+import React, { useRef, useState, useEffect } from 'react';
+import usericonURL from '../img/user-icon.png';
+import './RoomList.css';
 import RoomListContent from "./RoomListContent";
-function RoomList() {
+import { useNavigate } from 'react-router-dom';
 
-    // 모달창 사용을 위한 변수 선언
-    const [createRoomModalOpen, createRoomSetModalOpen] = useState(false);
-    const [searchRoomModalOpen, searchRoomSetModalOpen] = useState(false);
-
+const RoomList = () => {
+    const [createRoomModalOpen, setCreateRoomModalOpen] = useState(false);
+    const [rooms, setRooms] = useState([]); // 방 목록을 관리할 상태 추가
+    const [roomInfo, setRoomInfo] = useState({
+        title: '',
+        capacity: '',
+        password: '',
+        isVoiceChat: false
+    });
     const modalBackground = useRef();
+    const navigate = useNavigate();
 
     // ======= 페이징 =======
-    const numberOfRooms = 15; // 예시로 15개의 방을 생성
-    // 현재 페이지
     const [currentPage, setCurrentPage] = useState(1);
-    // 페이지 당 보여줄 방의 수
-    const roomsPerPage = 10;
-    // 현재 페이지의 방 목록 계산
+    const roomsPerPage = 5; // 페이지 당 보여줄 방의 수 변경
     const indexOfLastRoom = currentPage * roomsPerPage;
     const indexOfFirstRoom = indexOfLastRoom - roomsPerPage;
-    const currentRooms = Array.from({ length: numberOfRooms }).slice(indexOfFirstRoom, indexOfLastRoom);
-    // 페이지 변경 함수
+    const currentRooms = rooms.slice(indexOfFirstRoom, indexOfLastRoom); // 페이지에 맞게 방 목록 슬라이싱
+
     const paginate = pageNumber => setCurrentPage(pageNumber);
     //  ======= 페이징 종료 =======
 
+    // 로컬 스토리지에서 방 목록을 가져와 초기화
+    useEffect(() => {
+        const savedRooms = JSON.parse(localStorage.getItem('rooms')) || [];
+        setRooms(savedRooms);
+    }, []);
+
+    // 방 만들기 모달 열기
+    const openCreateRoomModal = () => {
+        setCreateRoomModalOpen(true);
+    };
+
+    // 방 만들기 모달 닫기
+    const closeCreateRoomModal = () => {
+        setCreateRoomModalOpen(false);
+    };
+
+    // 방 만들기
+    const createRoom = () => {
+        const roomId = Math.floor(Math.random() * 1000000); // 랜덤한 방 번호 생성
+        const newRoom = { ...roomInfo, id: roomId, title: `${roomId} - ${roomInfo.title}` }; // 방 번호를 제목에 추가
+        const updatedRooms = [...rooms, newRoom];
+        setRooms(updatedRooms);
+        localStorage.setItem('rooms', JSON.stringify(updatedRooms)); // 로컬 스토리지에 저장
+        closeCreateRoomModal();
+    };
+
+    // 방 목록으로 이동
+    const goToRoomList = () => {
+        navigate('/roomlist');
+    };
+
+    // 방 삭제
+    const deleteRoom = (roomId) => {
+        const updatedRooms = rooms.filter(room => room.id !== roomId);
+        setRooms(updatedRooms);
+        localStorage.setItem('rooms', JSON.stringify(updatedRooms)); // 로컬 스토리지에 저장
+    };
+
+    // 방 목록에서 방을 클릭했을 때의 이벤트 핸들러
+    const handleRoomClick = (roomId) => {
+        navigate(`/room/${roomId}`);
+    };
+
     return (
         <div>
-            <div className={'roomListNav'}>
-                {/*유저 아이콘*/}
-                <img className={'userIcon'} alt={"이미지 없음"} src={usericonURL}></img>
+            <div className="roomListNav">
+                {/* 유저 아이콘 */}
+                <img className="userIcon" alt="user icon" src={usericonURL} />
 
-                {/*    방만들기 모달창 */}
-                <modal>
-                    <div className={'btn-wrapper'}>
-                        <button className={'modal-open-btn'} onClick={() => createRoomSetModalOpen(true)}>
-                            방 만들기 버튼
-                        </button>
-                    </div>
-                    {
-                        createRoomModalOpen &&
-                        <div className={'modal-container'} ref={modalBackground} onClick={e => {
-                            if (e.target === modalBackground.current) {
-                                createRoomSetModalOpen(false);
-                            }
-                        }}>
-                            <div className={'modal-content'}>
-                                <p>방 만들기 모달창</p>
+                {/* 방 만들기 버튼 */}
+                <button className="modal-open-btn" onClick={openCreateRoomModal}>
+                    방 만들기 버튼
+                </button>
 
-                                {/* 방 번호 검색, 방 이름검색, or  텍스트,음성 검색필터 들어갈수있는방 검색필터*/}
-                                <input type={"text"} value={"방 이름"}></input>
-
-                                <p>암호사용</p>
-                                <input type={"checkbox"} value={"암호 사용"}></input>
-                                <input type={"password"} value={"비밀번호"}></input>
-
-                                <input type={"button"} value={'방 만들기'}></input>
-
-                                <button className={'modal-close-btn'} onClick={() => createRoomSetModalOpen(false)}>
-                                    모달 닫기
-                                </button>
-                            </div>
+                {/* 방 만들기 모달 */}
+                {createRoomModalOpen && (
+                    <div className="modal-container" ref={modalBackground} onClick={(e) => {
+                        if (e.target === modalBackground.current) {
+                            closeCreateRoomModal();
+                        }
+                    }}>
+                        <div className="modal-content">
+                            <p>방 만들기 모달창</p>
+                            {/* 제목 입력 */}
+                            <input type="text" placeholder="방 제목" value={roomInfo.title} onChange={(e) => setRoomInfo({ ...roomInfo, title: e.target.value })} />
+                            {/* 인원 수 입력 */}
+                            <input type="number" placeholder="인원 수" value={roomInfo.capacity} onChange={(e) => setRoomInfo({ ...roomInfo, capacity: e.target.value })} />
+                            {/* 비밀번호 입력 */}
+                            <input type="password" placeholder="비밀번호" value={roomInfo.password} onChange={(e) => setRoomInfo({ ...roomInfo, password: e.target.value })} />
+                            {/* 보이스 채팅 체크박스 */}
+                            <label>
+                                <input type="checkbox" checked={roomInfo.isVoiceChat} onChange={(e) => setRoomInfo({ ...roomInfo, isVoiceChat: e.target.checked })} />
+                                보이스 채팅
+                            </label>
+                            {/* 방 만들기 버튼 */}
+                            <input type="button" value="방 만들기" onClick={createRoom} />
+                            <button className="modal-close-btn" onClick={closeCreateRoomModal}>
+                                모달 닫기
+                            </button>
                         </div>
-                    }
-                </modal>
-
-
-                <div className={'checkBoxContainer'}>
-                    {/*    검색필터 체크박스 */}
-                    <p>들어갈수있는방만 보기</p>
-                    <input className={'checkBox'} type={"checkbox"} value={"체크박스1"}></input>
-                    <p>보이스 방만 보기</p>
-                    <input className={'checkBox'} type={"checkbox"}></input>
-                </div>
-
-
-                {/*    검색창 모달창 */}
-                <modal>
-                    <div className={'btn-wrapper'}>
-                        <button className={'modal-open-btn'} onClick={() => searchRoomSetModalOpen(true)}>
-                            방 검색 모달 버튼
-                        </button>
                     </div>
-                    {
-                        searchRoomModalOpen &&
-                        <div className={'modal-container'} ref={modalBackground} onClick={e => {
-                            if (e.target === modalBackground.current) {
-                                searchRoomSetModalOpen(false);
-                            }
-                        }}>
-                            <div className={'modal-content'}>
-                                <p>방 검색 모달창</p>
-
-                                {/* 방 번호 검색, 방 이름검색, or  텍스트,음성 검색필터 들어갈수있는방 검색필터*/}
-                                <input type={"text"} value={"방번호 검색창"}></input>
-
-                                <input type={"button"} value={'제출버튼'}></input>
-
-                                <button className={'modal-close-btn'} onClick={() => searchRoomSetModalOpen(false)}>
-                                    모달 닫기
-                                </button>
-                            </div>
-                        </div>
-                    }
-                </modal>
+                )}
             </div>
 
-            {currentRooms.map((room, index) => (
-                <RoomListContent
-                    key={index}
-                    roomNum={index + 1} // 예시로 방 번호를 index + 1로 지정
-                    // 나머지 roomName, peoplecount 등의 속성은 서버에서 받아오는 데이터에 따라 적절히 처리
-                />
-            ))}
-
-            {/*/!*    방 목록 리스트 *!/*/}
-            {/*<div className={'roomListContentContainer'}>*/}
-            {/*    <RoomListContent />*/}
-            {/*</div>*/}
-
-            {/* 페이징 */}
-            <div>
-                {Array.from({length: Math.ceil(numberOfRooms / roomsPerPage)}).map((_, index) => (
-                    <button key={index} onClick={() => paginate(index + 1)}>{index + 1}</button>
+            {/* 방 목록 */}
+            <div className="roomListContentContainer">
+                {currentRooms.map((room, index) => (
+                    <div key={index} className="roomListItem">
+                        <RoomListContent
+                            room={room} // 방 정보를 props로 전달
+                            onClick={() => handleRoomClick(room.id)}
+                        />
+                        <button onClick={() => deleteRoom(room.id)}>방 삭제</button>
+                    </div>
                 ))}
             </div>
 
+            {/* 페이징 */}
+            <div>
+                {Array.from({ length: Math.ceil(rooms.length / roomsPerPage) }).map((_, index) => (
+                    <button key={index} onClick={() => paginate(index + 1)}>{index + 1}</button>
+                ))}
+            </div>
         </div>
-    )
-}
+    );
+
+};
 
 export default RoomList;

@@ -10,7 +10,7 @@
 }
 .roomListContent{
     margin : 10px;
-    display : flex;
+    display: flex;
     border : solid black 3px;
 }
 .checkBoxContainer{
