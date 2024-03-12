@@ -1,0 +1,11 @@
+.LeftSidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 250px;
+  height: 100%;
+  background-color: #f8f9fa;
+  border-right: 1px solid #e9ecef;
+  z-index: 1000;
+  overflow-y: auto;
+}
