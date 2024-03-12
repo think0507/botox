@@ -1,11 +1,12 @@
 // Main.js
 import React, { useState, useEffect } from 'react';
 import './main.css';
-import './img.css';
+
 import { Link } from 'react-router-dom'; // react-router-dom에서 Link import
 import lolLogo from "../img/lol-logo.png";
-import suddenLogo from "../img/sudden.webp";
+import suddenLogo from "../img/sudden.png";
 import userIcon from "../img/user-icon.png";
+import logoImg from "../img/logo-img.png";
 
 function Main() {
     const [userCount, setUserCount] = useState(0);
@@ -24,14 +25,15 @@ function Main() {
     }, []); // 빈 배열을 전달하여 컴포넌트가 마운트될 때 한 번만 실행되도록 합니다.
 
     return (
-        <div>
-            <h1 className="logo">Welcome to Main!</h1>
-            <h2 className="title">인기게임</h2>
+        <div className='Main'>
+            <div className='logoImgContainer'>
+                <img className="logo" src={logoImg} alt={"logo"}></img>
+            </div>
             <div className="content">
                 {/* 리그오브레전드 이미지와 제목 */}
                 <div className="image-container">
                     <Link to="/lol">
-                        <img className="lol_img" alt="lol_logo" src={lolLogo}/>
+                        <img className="gameImage lol_img" alt="lol_logo" src={lolLogo}/>
                         <div className="title-overlay">리그오브레전드</div>
                     </Link>
                     <div className="lol_user_count">
@@ -41,7 +43,7 @@ function Main() {
                 {/* 서든어택 이미지와 제목 */}
                 <div className="image-container">
                     <Link to="/sudden">
-                        <img className="sudden" alt="sudden_logo" src={suddenLogo}/>
+                        <img className="gameImage sudden" alt="sudden_logo" src={suddenLogo}/>
                         <div className="title-overlay">서든어택</div>
                     </Link>
                     <div className="sudden_user_count">

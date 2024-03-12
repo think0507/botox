@@ -3,6 +3,8 @@ import usericonURL from '../img/user-icon.png';
 import './RoomList.css';
 import RoomListContent from "./RoomListContent";
 import { useNavigate } from 'react-router-dom';
+import LeftSidebar from "../navbar/LeftSidebar";
+import RightSidebar from "../navbar/RightSidebar";
 
 const RoomList = () => {
     const [createRoomModalOpen, setCreateRoomModalOpen] = useState(false);
@@ -70,7 +72,9 @@ const RoomList = () => {
     };
 
     return (
-        <div>
+        <div className='RoomList'>
+            <LeftSidebar />
+            <RightSidebar />
             <div className="roomListNav">
                 {/* 유저 아이콘 */}
                 <img className="userIcon" alt="user icon" src={usericonURL} />
