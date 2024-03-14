@@ -55,9 +55,9 @@ const RoomList = () => {
     };
 
     // 방 목록으로 이동
-    const goToRoomList = () => {
-        navigate('/roomlist');
-    };
+    // const goToRoomList = () => {
+    //     navigate('/roomlist');
+    // };
 
     // 방 삭제
     const deleteRoom = (roomId) => {
@@ -72,17 +72,19 @@ const RoomList = () => {
     };
 
     return (
-        <div className='RoomList'>
+        <div className="RoomList">
             <LeftSidebar />
             <RightSidebar />
             <div className="roomListNav">
                 {/* 유저 아이콘 */}
-                <img className="userIcon" alt="user icon" src={usericonURL} />
-
+                {/*<img className="userIcon" alt="user icon" src={usericonURL} />*/}
                 {/* 방 만들기 버튼 */}
-                <button className="modal-open-btn" onClick={openCreateRoomModal}>
-                    방 만들기 버튼
-                </button>
+                <div className="roomListFunctionContainer">
+                    <button className="modal-open-btn" onClick={openCreateRoomModal}>
+                        방 만들기 버튼
+                    </button>
+                </div>
+
 
                 {/* 방 만들기 모달 */}
                 {createRoomModalOpen && (
