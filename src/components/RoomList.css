@@ -1,7 +1,8 @@
-
 .RoomList{
     margin-left:250px;
     margin-right:250px;
+    background-color: #2f2f2f;
+    height: 100vh;
 }
 
 .userIcon{
@@ -9,48 +10,47 @@
     height:100px;
 }
 .roomListContentContainer{
-    width : 90vw;
-    height : 70vh;
-    border:solid 3px black;
-
+    background-color: #2f2f2f;
 }
 .roomListContent{
-    margin : 10px;
     display: flex;
-    border : solid black 3px;
-}
-.checkBoxContainer{
-    display : flex;
-    margin : 30px;
-}
-.checkBox{
-    transform : scale(2);
 }
 .roomListNav{
     display:flex;
 }
 .createRoomButton{
     width : 500px;
+
 }
-.roomContent{
-    padding : 10px;
-    margin : 20px;
-    border : solid 3px black;
+.roomListFunctionContainer{
+    margin-top: 100px;
+    margin-left:200px;
 }
-.roomListContent:hover{
-    background : gray;
-}
+
 
 /* ===== 모달 CSS ===== */
 .btn-wrapper {
     display: flex;
     justify-content: center;
     margin-top: 5rem;
+
 }
 
 .modal-open-button, .modal-close-btn {
     cursor: pointer;
     margin-left: auto;
+}
+.modal-open-btn{
+    width: 200px;
+    height: 100px;
+    border-color: lightblue;
+    color: black;
+    box-shadow: 0 0 40px 40px lightblue inset, 0 0 0 0 lightblue;
+    transition: all 150ms ease-in-out;
+    border-radius: 25px;
+    &:hover {
+        box-shadow: 0 0 10px 0 lightblue inset, 0 0 10px 4px lightblue;
+    }
 }
 
 .modal-container {
