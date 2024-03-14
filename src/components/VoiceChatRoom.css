@@ -1,0 +1,42 @@
+.roomName{
+    color:white;
+}
+.peopleCountContainer{
+    color:white;
+}
+
+.voiceChatRoomContainer{
+    height : 100vh;
+    background-color: #2f2f2f;
+}
+.voiceChatRoomTopNav{
+    display:flex;
+}
+.peopleCountContainer{
+    display:flex;
+}
+
+.voiceChatRoomBottomNav{
+    position : relative;
+    display:flex;
+}
+.centerIcons{
+    display:flex;
+    position : absolute;
+    left : 50%;
+}
+.rightIcons{
+    display:flex;
+    right : 5%;
+    position : absolute;
+}
+.textChatContainer {
+    position : absolute;
+    bottom : 0;
+    left : 2%;
+    background-color: #3f3f3f;
+    height: 300px;
+    width: 95vw;
+    margin: auto;
+    border-radius: 25px;
+}
