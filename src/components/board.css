@@ -18,7 +18,7 @@
 .search-wrapper {
     position: relative;
     float: right;
-    margin-right: 5px;
+    margin-right: -70px;
 }
 .search-input {
     width: 300px;
@@ -39,7 +39,7 @@
 #board_title {
     margin-left: 250px;
     padding: 5px;
-    margin-top: 10px;
+    margin-top: -10px;
     color: white;
 }
 
@@ -116,13 +116,13 @@
 .post-name{
     margin-left: 20px;
 }
-.post-plus{
+.post-recommend{
     display: flex;
     flex-direction: column;
     padding: 20px;
     margin-left: -50px;
 }
-.plus {
+.recommend {
     color:white;
     margin-top: 5px;
 }
@@ -137,6 +137,7 @@
 
 .post-create-container {
     margin-bottom: 20px;
+    margin-right: -70px;
     display: flex;
     justify-content: flex-end; /* 버튼을 우측 정렬 */
     align-items: center; /* 세로 중앙 정렬 */
