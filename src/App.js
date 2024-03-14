@@ -18,9 +18,9 @@ function App() {
                 <Routes>
                     <Route path="/" element={<Main />}/>
                     <Route path="/Board" element={<Board />}/>
-                    <Route path="/contact" element={<Login />}/>
                     <Route path="/RoomList" element={<RoomList />}/>
                     <Route path="/Signup" element={<Signup />}/>
+                    <Route path="/Login" element={<Login />}/>
                     <Route path="/:gameName" element={<MainGameComponents />}/>
                     <Route path="/TextChatRoom" element={<TextChatRoom />}/>
                     <Route path="/VoiceChatRoom" element={<VoiceChatRoom />}/>

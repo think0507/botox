@@ -11,8 +11,9 @@ import Pagination from './Pagination'; // Pagination 컴포넌트 가져오기
 const Board = () => {
     // Pagination에 필요한 state 설정
     const [currentPage, setCurrentPage] = useState(1); // 현재 페이지 번호
+    {/* 여기에다가 나중에 백엔드에서 JSON 으로 받아올 곳*/}
     const totalItems = [
-        { id: 1, title: "쵸비 VS 에디 후기 ㄷㄷㄷㄷㄷㄷ .JPG", author: "동욱", time: "2시간 전", image: randomimg }
+        { id: 1, recommend: 80, title: "쵸비 VS 에디 후기 ㄷㄷㄷㄷㄷㄷ .JPG", author: "동욱", time: "2시간 전", image: randomimg },
         // 추가적인 게시글을 필요한 만큼 추가할 수 있습니다
     ];
 
@@ -41,17 +42,21 @@ const Board = () => {
                         </div>
                     </div>
                 </div>
-                <div className="posts-container"> {/* 포스트들을 감싸는 컨테이너 */}
-                    <div className="post-plus">
-                        <img className="poly" src={Polygon} alt="polygon"/>
-                        <h3 className="plus">81</h3>
+                {/* 더미 데이터를 기반으로 게시글 목록을 렌더링 */}
+                {totalItems.map((item) => (
+                    <div className="posts-container" key={item.id}>
+                        <div className="post-recommend">
+                            <img className="poly" src={Polygon} alt="polygon"/>
+                            <h3 className="recommend">{item.recommend}</h3>
+                        </div>
+                        <div className="post-text">
+                            <h2 className="post-title">{item.title}</h2>
+                            <h3 className="post-name"><img src={Egg} alt="Egg"/>{item.author} {item.time}</h3>
+                        </div>
+                        <img className="post-img" src={item.image} alt="random"/>
                     </div>
-                    <div className="post-text">
-                        <h2 className="post-title">쵸비 VS 에디 후기 ㄷㄷㄷㄷㄷㄷ .JPG</h2>
-                        <h3 className="post-name"><img src={Egg} alt="Egg"/>동욱 2시간전</h3>
-                    </div>
-                    <img className="post-img" src={randomimg} alt="random"/>
-                </div>
+                ))}
+                {/* Pagination 컴포넌트를 렌더링합니다. */}
                 <Pagination
                     currentPage={currentPage}
                     setCurrentPage={setCurrentPage}
