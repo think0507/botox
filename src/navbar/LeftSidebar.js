@@ -12,9 +12,9 @@ const LeftSidebar = () => {
             </li>
         </ul>
         <ul>
-        <li><Link to="/">Main</Link></li>
-            <li><Link to="/contact">Login</Link></li>
-            <li><Link to="/Board">Board</Link></li>
+            <li><Link to="/">홈</Link></li>
+            <li><Link to="/Board">게시판</Link></li>
+            <li><Link to="/Board">로그아웃</Link></li>
         </ul>
     </div>
   );

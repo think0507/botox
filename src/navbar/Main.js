@@ -30,7 +30,7 @@ function Main() {
                 <img className="logo" src={logoImg} alt={"logo"}></img>
             </div>
             <div className="content">
-                {/* 리그오브레전드 이미지와 제목 */}
+                {/* 리그오브레전드 이미지와 제목  */}
                 <div className="image-container">
                     <Link to="/lol">
                         <img className="gameImage lol_img" alt="lol_logo" src={lolLogo}/>

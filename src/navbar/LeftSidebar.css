@@ -4,8 +4,11 @@
   left: 0;
   width: 250px;
   height: 100%;
-  background-color: #f8f9fa;
+  background-color: #424242;
   border-right: 1px solid #e9ecef;
   z-index: 1000;
   overflow-y: auto;
+}
+li{
+  color : white;
 }

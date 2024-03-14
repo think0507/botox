@@ -1,15 +1,21 @@
-.container {
-    width: 400px;
-    margin: 100px auto;
-    padding: 40px;
-    background-color: white;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+.login-container {
+    display: flex;
+    flex-direction: column; /* 행 방향이나 열 방향으로 요소 정렬 */
+    justify-content: center; /* 요소를 수직 방향으로 가운데 정렬 */
+    align-items: center; /* 요소를 수평 방향으로 가운데 정렬 */
+    height: 100vh; /* 뷰포트 높이에 맞게 설정 */
+    background-color: #2c2c2c;
+    background-image: url('../img/MainLogo.png'); /* MainLogo 이미지 경로로 수정 */
+    background-size: 50%;
+    background-position: center;
+    background-repeat: no-repeat;
 }
+
 
 .title {
     text-align: center;
-    margin-bottom: 40px;
+    margin-bottom: 20px;
+    margin-top: -50px;
 }
 
 .title h2 {
@@ -21,11 +27,14 @@
 .subtitle h3 {
     font-size: 24px;
     font-weight: bold;
-    color: gray;
+    color: white;
+
 }
 
 .form-input {
     margin-bottom: 20px;
+    border-radius: 10px;
+    width: 40%;
 }
 
 .form-input input {
@@ -56,12 +65,13 @@
 }
 
 .login-btn {
-    width: 100%;
+    width: 105%;
     padding: 12px;
-    background-color: #007bff;
-    color: white;
+    background-color: #d9d9d9;
+    color: black;
     border: none;
     border-radius: 4px;
+    margin-top: 30px;
     font-size: 18px;
     font-weight: bold;
     cursor: pointer;
@@ -90,7 +100,9 @@
 }
 
 .signup-btn span {
-    color: pink;
+    color: white;
+    font-size: 20px;
+    background-color: #2c2c2c;
     font-weight: bold;
     cursor: pointer;
 }
