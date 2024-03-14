@@ -8,6 +8,7 @@ import RoomList from './components/RoomList';
 import MainGameComponents from "./components/MainGameComponents";
 import TextChatRoom from "./components/TextChatRoom";
 import VoiceChatRoom from "./components/VoiceChatRoom";
+import Board from "./components/Board";
 
 function App() {
     return (
@@ -22,6 +23,7 @@ function App() {
                     <Route path="/:gameName" element={<MainGameComponents />}/>
                     <Route path="/TextChatRoom" element={<TextChatRoom />}/>
                     <Route path="/VoiceChatRoom" element={<VoiceChatRoom />}/>
+                    <Route path="/Board" element={<Board />} />
                 </Routes>
             </div>
         </BrowserRouter>
