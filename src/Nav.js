@@ -7,7 +7,7 @@ function Nav() {
             <div className="navbar">
                 <Link className="navbarMenu" to={'/'}>홈</Link>
                 <Link className="navbarMenu" to={'/Board'}>게시판</Link>
-                <Link className="navbarMenu" to={'/contact'}>로그인</Link>
+                <Link className="navbarMenu" to={'/Login'}>로그인</Link>
             </div>
     )
 }
