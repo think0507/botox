@@ -2,8 +2,11 @@ package com.botox.domain;
 
 import com.botox.constant.UserStatus;
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
 @Entity
+@Getter @Setter
 @Table(name = "user")
 public class User {
     @Id
@@ -20,5 +23,6 @@ public class User {
     private UserStatus status; // enum: ONLINE, OFFLINE
 
     // Getters, setters, constructors
+
 }
 
