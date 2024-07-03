@@ -13,9 +13,7 @@ public class Friendship {
     @JoinColumn(name = "acceptId")
     private User acceptedUser;
 
-    @ManyToOne
-    @JoinColumn(name = "requestId")
-    private User requestedUser;
+    private Long requestedUserId;
 
     // Getters, setters, constructors
 }

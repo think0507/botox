@@ -7,6 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,7 +18,7 @@ import java.util.List;
 @RestController //컨트롤러를 사용할때는 항상 RestController 사용
 @RequiredArgsConstructor
 @RequestMapping("/api") //8080/api 형태로 매핑됨
-
+@Slf4j
 public class RoomApiController {
     private final RoomService roomService;
 
@@ -37,6 +38,7 @@ public class RoomApiController {
         } catch (NotFoundRoomException e) {
             return new ResponseForm<>(HttpStatus.NO_CONTENT, null, e.getMessage());
         } catch (Exception e) {
+            log.info("error", e);
             return new ResponseForm<>(HttpStatus.INTERNAL_SERVER_ERROR, null, "An unexpected error occurred");
         }
     }
