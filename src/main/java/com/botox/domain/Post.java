@@ -18,7 +18,7 @@ public class Post {
 
     private String title;
     @Column(columnDefinition = "TEXT")
-    private String content;
+    private String content; //크기 업
     private LocalDateTime date;
     private int likesCount;
 
