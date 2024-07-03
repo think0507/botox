@@ -1,18 +1,11 @@
 package com.botox.domain;
 
-import com.botox.domain.Room;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "chat")
-@Getter
-@Setter
-@NoArgsConstructor
 public class Chat {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -31,5 +24,8 @@ public class Chat {
 
     private LocalDateTime timestamp;
 
-    // inappropriateReport 필드 제거
+    @ManyToOne
+    @JoinColumn(name = "inappropriate_report_id")
+    private Report inappropriateReport;
 }
+
