@@ -20,11 +20,13 @@ public class Comment {
     private User author;
 
     @Column(columnDefinition = "TEXT")
-    private Long commentContent;
+    private String commentContent;  // Long에서 String으로 변경
 
     private int likesCount;
 
     @ManyToOne
     @JoinColumn(name = "post_id")
     private Post post;
+
+    // Getters, setters, constructors
 }

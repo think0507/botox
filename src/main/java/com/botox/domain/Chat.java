@@ -1,5 +1,6 @@
 package com.botox.domain;
 
+import com.botox.domain.Room;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -26,7 +27,7 @@ public class Chat {
     private User sender;
 
     @Column(columnDefinition = "TEXT")
-    private Long content;
+    private String content;  // Long에서 String으로 변경
 
     private LocalDateTime timestamp;
 
@@ -34,3 +35,4 @@ public class Chat {
     @JoinColumn(name = "inappropriate_report_id")
     private Report inappropriateReport;
 }
+
