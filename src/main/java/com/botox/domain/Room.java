@@ -25,7 +25,7 @@ public class Room {
 
     private String roomContent;
 
-    private Integer roomUserCount;
+    private Integer roomUserCount=0;
 
     @Enumerated(EnumType.STRING)
     private RoomType roomType;
