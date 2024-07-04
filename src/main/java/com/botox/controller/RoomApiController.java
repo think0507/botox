@@ -1,5 +1,7 @@
 package com.botox.controller;
 
+import com.botox.constant.RoomStatus;
+import com.botox.constant.RoomType;
 import com.botox.domain.Room;
 import com.botox.exception.NotFoundRoomException;
 import com.botox.service.RoomService;
@@ -85,10 +87,10 @@ public class RoomApiController {
         private Long roomNum;
         private String roomTitle;
         private String roomContent;
-        private String roomType;
+        private RoomType roomType;
         private String gameName;
         private Long roomMasterId;
-        private Integer roomStatus;
+        private RoomStatus roomStatus;
         private Integer roomCapacityLimit;
         private Timestamp roomUpdateTime; //이거 찾아봐야 됨 LocalDatatime이랑 차이점
         private Timestamp roomCreateAt;
