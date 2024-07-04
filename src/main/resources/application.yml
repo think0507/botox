@@ -13,14 +13,15 @@ spring:
         dialect: org.hibernate.dialect.H2Dialect
         format_sql: true
         default_batch_fetch_size: 100
-  h2:
-    console:
-      enabled: true
-      path: /h2-console
 
-logging:
-  level:
-    org.hibernate.SQL: info
-    org.hibernate.type: trace
-    org.springframework.orm.jpa: DEBUG
-    org.springframework.transaction: DEBUG
+    h2:
+      console:
+        enabled: true
+        path: /h2-console
+
+  logging:
+    level:
+      org.hibernate.SQL: info
+      org.hibernate.type: trace
+      org.springframework.orm.jpa: DEBUG
+      org.springframework.transaction: DEBUG
