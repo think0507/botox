@@ -25,6 +25,23 @@ public class UserService implements UserDetailsService {
     private final TokenProvider tokenProvider;
     private final PasswordEncoder passwordEncoder;
 
+    public void createUser(
+            String userNickname,
+            String password1,
+            String userId
+    ) {
+        User newUser = new User();
+        newUser.setUserNickname(userNickname);
+        newUser.setPassword(
+                passwordEncoder.encode(password1)
+        );
+        newUser.setUserId(userId);
+
+        // 중복 유저 체크
+        validateDuplicateUser(newUser);
+        User savedUser = userRepository.save(newUser);
+    }
+
     public boolean existsByUsername(String username) {
         return userRepository.existsByUserNickname(username);
     }
