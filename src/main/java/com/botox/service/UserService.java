@@ -25,15 +25,15 @@ public class UserService {
     // 유저 정보 수정
     @Transactional
     public User updateUser(String userId, User userDetails) {
-        User user = userRepository.findByUserId(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userRepository.findByUserId(userId).orElseThrow(() -> new RuntimeException("User not found"));
         if (userDetails.getUserNickname() != null) {
             user.setUserNickname(userDetails.getUserNickname());
         }
         if (userDetails.getPassword() != null) {
             user.setPassword(userDetails.getPassword());
         }
-
+        user.setUserProfile(userDetails.getUserProfile());
+        user.setUserProfilePic(userDetails.getUserProfilePic());
         return userRepository.save(user);
     }
 
