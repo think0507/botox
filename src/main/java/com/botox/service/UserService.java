@@ -15,10 +15,6 @@ import java.util.Optional;
 public class UserService {
     private final UserRepository userRepository;
 
-    // 유저 생성
-    public User createUser(User user) {
-        return userRepository.save(user);
-    }
 
 //    // 모든 유저 조회
 //    public List<User> getAllUsers() {
