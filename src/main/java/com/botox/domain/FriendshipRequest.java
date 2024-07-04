@@ -10,8 +10,7 @@ import java.time.LocalDateTime;
 //기존에 코드에서 필요없는 getter와 setter 모두 없애고 lombok으로 대체
 @Entity
 @Table(name = "friendshiprequest")
-@Getter
-@Setter
+@Getter @Setter
 @NoArgsConstructor
 public class FriendshipRequest {
     @Id

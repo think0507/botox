@@ -23,5 +23,8 @@ public class Friendship {
     @Column(name = "requestId")
     private Long requestedUserId;
 
+    @OneToOne
+    @JoinColumn(name = "friendship_request_id")
+    private FriendshipRequest friendshipRequest;
     // Lombok will generate the getters, setters, and the no-args constructor
 }
