@@ -7,13 +7,13 @@ import lombok.Setter;
 
 @Entity
 @Getter @Setter
-@Table(name = "user")
+@Table(name = "users")
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "user_id")
+    @Column(name = "user_id", nullable = false, unique = true)
     private String userId;
 
     @Column(name = "profile")
@@ -25,10 +25,10 @@ public class User {
     @Column(name = "user_temperature_level")
     private int userTemperatureLevel;
 
-    @Column(name = "user_nickname")
+    @Column(name = "user_nickname", nullable = false, unique = true)
     private String userNickname;
 
-    @Column(name = "user_password")
+    @Column(name = "user_password", nullable = false)
     private String password;
 
 
@@ -38,4 +38,3 @@ public class User {
     // Getters, setters, constructors
 
 }
-
