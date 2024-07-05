@@ -21,22 +21,6 @@ public class UserService {
         return userRepository.findByUserId(userId);
     }
 
-
-    // 유저 정보 수정
-    @Transactional
-    public User updateUser(String userId, User userDetails) {
-        User user = userRepository.findByUserId(userId).orElseThrow(() -> new RuntimeException("User not found"));
-        if (userDetails.getUserNickname() != null) {
-            user.setUserNickname(userDetails.getUserNickname());
-        }
-        if (userDetails.getPassword() != null) {
-            user.setPassword(userDetails.getPassword());
-        }
-        user.setUserProfile(userDetails.getUserProfile());
-        user.setUserProfilePic(userDetails.getUserProfilePic());
-        return userRepository.save(user);
-    }
-
     // 유저 삭제
     @Transactional
     public void deleteUser(String userId) {
@@ -63,13 +47,6 @@ public class UserService {
     public ProfileDto getUserProfile(String userId) {
         User user = userRepository.findByUserId(userId).orElseThrow(() -> new RuntimeException("User not found"));
         return new ProfileDto(user.getUserNickname(),user.getUserProfile(), user.getUserProfilePic());
-    }
-
-    // 비밀번호 변경
-    public User updateUserPassword(String userId, String password) {
-        User user = userRepository.findByUserId(userId).orElseThrow(() -> new RuntimeException("User not found"));
-        user.setPassword(password);
-        return userRepository.save(user);
     }
 
 }

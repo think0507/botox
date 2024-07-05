@@ -27,13 +27,6 @@ public class UserController {
         return new ResponseForm<>(HttpStatus.OK, user, "User retrieved successfully");
     }
 
-    // 유저 정보 수정
-    @PatchMapping("/{userId}")
-    public ResponseForm<User> updateUser(@PathVariable String userId, @RequestBody User userDetails) {
-        User updatedUser = userService.updateUser(userId, userDetails);
-        return new ResponseForm<>(HttpStatus.OK, updatedUser, "User updated successfully");
-    }
-
     // 유저 삭제(회원탈퇴)
     @DeleteMapping("/{userId}")
     public ResponseForm<Void> deleteUser(@PathVariable String userId) {
@@ -62,13 +55,6 @@ public class UserController {
     public ResponseForm<ProfileDto> getUserProfile(@PathVariable String userId) {
         ProfileDto userProfile = userService.getUserProfile(userId);
         return new ResponseForm<>(HttpStatus.OK, userProfile, "User profile retrieved successfully");
-    }
-
-    // 비밀번호 변경
-    @PatchMapping("/{userId}/password")
-    public ResponseForm<User> updateUserPassword(@PathVariable String userId, @RequestBody String password) {
-        User updatedUser = userService.updateUserPassword(userId, password);
-        return new ResponseForm<>(HttpStatus.OK, updatedUser, "User password updated successfully");
     }
 
 }
