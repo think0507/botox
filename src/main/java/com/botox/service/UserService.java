@@ -1,13 +1,14 @@
 package com.botox.service;
 
 import com.botox.config.jwt.TokenProvider;
-import com.botox.domain.AccessTokenDTO;
+import com.botox.constant.UserStatus;
+import com.botox.domain.LoginResponseDTO;
 import com.botox.domain.SpringUser;
 import com.botox.domain.User;
+import com.botox.domain.UserCreateForm;
 import com.botox.repository.UserRepository;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -15,7 +16,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
-import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -24,79 +24,111 @@ public class UserService implements UserDetailsService {
     private final UserRepository userRepository;
     private final TokenProvider tokenProvider;
     private final PasswordEncoder passwordEncoder;
+    private final RedisTemplate<String, Object> redisTemplate;
 
-    public void createUser(
-            String userNickname,
-            String password1,
-            String userId
-    ) {
+    public UserCreateForm createUser(UserCreateForm userCreateForm) {
         User newUser = new User();
-        newUser.setUserNickname(userNickname);
-        newUser.setPassword(
-                passwordEncoder.encode(password1)
-        );
-        newUser.setUserId(userId);
+        newUser.setUserId(userCreateForm.getUserId());
+        newUser.setPassword(passwordEncoder.encode(userCreateForm.getPassword1()));
+        newUser.setUserNickname(userCreateForm.getUserNickName());
 
-        // 중복 유저 체크
         validateDuplicateUser(newUser);
-        User savedUser = userRepository.save(newUser);
+        userRepository.save(newUser);
+        return userCreateForm;
     }
 
-    public boolean existsByUsername(String username) {
-        return userRepository.existsByUserNickname(username);
+    public boolean existsByUserNickname(String userNickname) {
+        return userRepository.existsByUserNickname(userNickname);
     }
 
-    public boolean existsByEmail(String username) {
-        return userRepository.existsByUserId(username);
+    public boolean existsByEmail(String userId) {
+        return userRepository.existsByUserId(userId);
     }
 
     public void validateDuplicateUser(User user) {
-        // username 중복 검사
-        if (existsByUsername(user.getUserNickname())) {
-            throw new IllegalStateException("이미 존재하는 username 입니다.");
+        if (existsByUserNickname(user.getUserNickname())) {
+            throw new IllegalStateException("이미 존재하는 userNickname 입니다.");
         }
-        // email 중복 검사
         if (existsByEmail(user.getUserId())) {
-            throw new IllegalStateException("이미 존재하는 email 입니다.");
+            throw new IllegalStateException("이미 존재하는 userId 입니다.");
         }
     }
 
     @Override
-    public UserDetails loadUserByUsername(
-            String userId  // 로그인 ID 를 말함
-    ) throws UsernameNotFoundException {
+    public UserDetails loadUserByUsername(String userId) throws UsernameNotFoundException {
         Optional<User> registeredUser = userRepository.findByUserId(userId);
         if (registeredUser.isEmpty()) {
             throw new UsernameNotFoundException(userId);
         }
-//        User foundUser = registeredUser.get();
-//        return new SpringUser( // 인증에 사용하기 위해 준비된 UserDetails 구현체
-//            foundUser.getEmail(),
-//            foundUser.getPassword(),
-//            new ArrayList<>()
-//        );
         return SpringUser.getSpringUserDetails(registeredUser.get());
     }
 
-    public AccessTokenDTO getAccessToken(User user) {
+    public Optional<User> findByUserId(String userId) {
+        return userRepository.findByUserId(userId);
+    }
+
+    public LoginResponseDTO getAccessToken(User user, String rawPassword) {
         UserDetails userDetails;
-        // 1) Spring Security 로그인 전용 메서드 loadUserByUsername 사용해 인증
         try {
             userDetails = loadUserByUsername(user.getUserId());
         } catch (Exception e) {
             return null;
         }
-        // 2) UserService 에 TokenProvider 주입 -> Done
-        // 3) TokenProvider 에서 Token String 을 생성
-        //    - 비밀번호 체크
-        if (passwordEncoder.matches(user.getPassword(), userDetails.getPassword())) {
-            // 4) AccessTokenDTO 로 Wrapping 및 리턴
-            String accessToken = tokenProvider.generateToken(user, Duration.ofHours(1L));
-            String tokenType = "Bearer";
-            return new AccessTokenDTO(
-                    accessToken, tokenType
-            );
+
+        if (passwordEncoder.matches(rawPassword, userDetails.getPassword())) {
+            String accessToken = tokenProvider.generateAccessToken(user, Duration.ofMinutes(1));
+            String refreshToken = tokenProvider.generateRefreshToken(user, Duration.ofDays(7));
+            updateUserStatus(user.getUserId(), UserStatus.ONLINE);
+
+            redisTemplate.opsForValue().set("TOKEN:" + user.getUserId(), accessToken, Duration.ofMinutes(1));
+            redisTemplate.opsForValue().set("REFRESH_TOKEN:" + user.getUserId(), refreshToken, Duration.ofDays(7));
+
+            return new LoginResponseDTO(user.getUserId(), user.getPassword(), accessToken, refreshToken, UserStatus.ONLINE);
         }
         return null;
     }
+
+    public void logout(String userId) {
+        Optional<User> userOptional = userRepository.findByUserId(userId);
+        if (userOptional.isPresent()) {
+            User user = userOptional.get();
+            updateUserStatus(user.getUserId(), UserStatus.OFFLINE);
+
+            redisTemplate.delete("TOKEN:" + userId);
+            redisTemplate.delete("REFRESH_TOKEN:" + userId);
+        } else {
+            throw new UsernameNotFoundException("User not found with userId: " + userId);
+        }
+    }
+
+    public LoginResponseDTO refreshAccessToken(String userId, String refreshToken) {
+        String storedRefreshToken = (String) redisTemplate.opsForValue().get("REFRESH_TOKEN:" + userId);
+        if (storedRefreshToken != null && storedRefreshToken.equals(refreshToken)) {
+            Optional<User> userOptional = userRepository.findByUserId(userId);
+            if (userOptional.isPresent()) {
+                User user = userOptional.get();
+                String newAccessToken = tokenProvider.generateAccessToken(user, Duration.ofMinutes(1));
+
+                redisTemplate.opsForValue().set("TOKEN:" + userId, newAccessToken, Duration.ofMinutes(1));
+                redisTemplate.opsForValue().set("REFRESH_TOKEN:" + userId, refreshToken, Duration.ofDays(7));
+
+                return new LoginResponseDTO(user.getUserId(), user.getPassword(), newAccessToken, refreshToken,user.getStatus());
+            }
+        }
+        return null;
+    }
+
+    public boolean validateAccessToken(String token) {
+        return tokenProvider.validateToken(token);
+    }
+
+    private void updateUserStatus(String userId, UserStatus status) {
+        Optional<User> userOptional = userRepository.findByUserId(userId);
+        if (userOptional.isPresent()) {
+            User user = userOptional.get();
+            user.setStatus(status);
+            userRepository.save(user);
+        }
+    }
 }
+

@@ -5,6 +5,9 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.sql.Date;
+import java.sql.Timestamp;
+
 @Entity
 @Getter @Setter
 @Table(name = "users")
@@ -29,15 +32,10 @@ public class User {
     private String userNickname;
 
     @Column(name = "user_password")
-
-
     private String password;
-
 
     @Enumerated(EnumType.STRING)
     private UserStatus status; // enum: ONLINE, OFFLINE
 
     // Getters, setters, constructors
-
 }
-

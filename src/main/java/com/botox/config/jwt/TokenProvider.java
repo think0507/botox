@@ -1,10 +1,8 @@
 package com.botox.config.jwt;
 
+
 import com.botox.domain.User;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Header;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -21,11 +19,21 @@ import java.util.Set;
 public class TokenProvider {
     private final JwtProperties jwtProperties;
 
-    public String generateToken(User user, Duration expiry) {
+    // 토큰을 외부에 전달
+    public String generateAccessToken(User user, Duration expiry) {
         Date now = new Date();
         Date expiredAt = new Date(now.getTime() + expiry.toMillis());
         return makeToken(now, expiredAt, user);
     }
+
+    public String generateRefreshToken(User user, Duration duration) {
+        return Jwts.builder()
+                .setSubject(user.getUserId())
+                .setExpiration(new Date(System.currentTimeMillis() + duration.toMillis()))
+                .signWith(SignatureAlgorithm.HS512, jwtProperties.getSecretKey())
+                .compact();
+    }
+
 
     // 토큰을 내부에서 생성
     private String makeToken(Date now, Date expiredAt, User user) {
@@ -35,19 +43,19 @@ public class TokenProvider {
                 .setIssuedAt(now)
                 .setExpiration (expiredAt)
                 .setSubject(user.getUserNickname())
-                .claim("id", user.getId())
+                .claim("userId", user.getUserId())
                 // 암호키를 사용해서 시그니처를 작성
                 .signWith(SignatureAlgorithm.HS256, jwtProperties.getSecretKey())
                 .compact();
     }
 
     // 토큰을 외부에서 수신 후 검증
-    public boolean validateToken(String token) {
+    public boolean validateToken(String accessToken) {
         // 인코딩된 내용, 암호화된 signature 모두 의미 추출
         try {
             Jwts.parser()
                     .setSigningKey(jwtProperties.getSecretKey())  // 암호키를 알고있는 서버가
-                    .parseClaimsJws(token);                       // 토큰을 해석한다
+                    .parseClaimsJws(accessToken);                       // 토큰을 해석한다
             return true;
         } catch (Exception e) {
             return false;
@@ -55,24 +63,40 @@ public class TokenProvider {
     }
 
     // 토큰 수신 후 토큰 소유자 조회
-    public Authentication getAuthentication(String token) {
+    public Authentication getAuthentication(String accessToken) {
         // 토큰 정보를 통해 유저 인증 정보 확인
-        Claims claims = getClaims(token);
-        Set<SimpleGrantedAuthority> authorities = Collections.singleton(
-                new SimpleGrantedAuthority("ROLE_USER")
-        );
+        Claims claims = getClaims(accessToken);
+        Set<SimpleGrantedAuthority> authorities = Collections.emptySet();
         return new UsernamePasswordAuthenticationToken(
                 claims.getSubject(),
-                token,
+                accessToken,
                 authorities
         );
     }
 
-    private Claims getClaims(String token) {
+    private Claims getClaims(String accessToken) {
         // 토큰 기반 클레임 데이터 해독
         return Jwts.parser()
                 .setSigningKey(jwtProperties.getSecretKey())
-                .parseClaimsJws(token)
+                .parseClaimsJws(accessToken)
                 .getBody();
     }
+
+    // Method to get remaining time for accessToken
+    public long getRemainingTimeForAccessToken(String accessToken) {
+        try {
+            Date expiration = Jwts.parser()
+                    .setSigningKey(jwtProperties.getSecretKey())
+                    .parseClaimsJws(accessToken)
+                    .getBody()
+                    .getExpiration();
+            Date now = new Date();
+            return expiration.getTime() - now.getTime();
+        } catch (ExpiredJwtException e) {
+            return 0; // Token is expired
+        } catch (Exception e) {
+            throw new RuntimeException("Could not parse token", e);
+        }
+    }
+
 }

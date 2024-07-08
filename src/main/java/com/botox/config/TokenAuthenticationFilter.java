@@ -1,22 +1,25 @@
 package com.botox.config;
 
 import com.botox.config.jwt.TokenProvider;
+import com.botox.controller.ResponseForm;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.List;
 
 @RequiredArgsConstructor
 public class TokenAuthenticationFilter extends OncePerRequestFilter {
-    // 아래 구조와 같은 토큰을 수신한 경우 효과적으로 Auth 수행
-    // Authorization: Bearer Header.Payload.Signature
     private final TokenProvider tokenProvider;
+    private final List<String> excludedPaths;
     private static final String AUTHORIZATION_HEADER = "Authorization";
     private static final String TOKEN_PREFIX = "Bearer ";
 
@@ -26,24 +29,34 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
             HttpServletResponse response,
             FilterChain filterChain
     ) throws ServletException, IOException {
-        // 수신한 request 에서 토큰 추출
+        String requestURI = request.getRequestURI();
+
+        // 인증이 필요없는 경로는 토큰 검증을 생략
+        if (excludedPaths.contains(requestURI)) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         String token = getAccessToken(request);
         if (token != null && tokenProvider.validateToken(token)) {
-            // 토큰의 유효성 판단 후
             Authentication authentication = tokenProvider.getAuthentication(token);
-            // 토큰 소유자 권한에 따라 요청 맥락에 권한 부여
             SecurityContextHolder.getContext().setAuthentication(authentication);
+        } else {
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
+            ResponseForm<Object> responseForm = new ResponseForm<>(HttpStatus.FORBIDDEN, null, "유효하지 않은 토큰입니다.");
+            ObjectMapper objectMapper = new ObjectMapper();
+            response.getWriter().write(objectMapper.writeValueAsString(responseForm));
+            return;
         }
         filterChain.doFilter(request, response);
     }
 
     private String getAccessToken(HttpServletRequest request) {
-        // 토큰 전체 값 추출
         String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
         if (bearerToken != null && bearerToken.startsWith(TOKEN_PREFIX)) {
-            // 접두사 제거한 토큰 값 리턴
-            // = Claim 에 해당하는 String 을 리턴
-            return bearerToken.substring(7);
+            return bearerToken.substring(TOKEN_PREFIX.length());
         }
         return null;
     }
