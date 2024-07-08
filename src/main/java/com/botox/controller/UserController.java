@@ -1,17 +1,13 @@
 package com.botox.controller;
 
-import com.botox.domain.ProfileDto;
+import com.botox.domain.ProfileDTO;
 import com.botox.domain.User;
 import com.botox.service.UserService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 @RestController
 @RequiredArgsConstructor
@@ -52,8 +48,8 @@ public class UserController {
 
     // userProfile 조회
     @GetMapping("/{userId}/profile")
-    public ResponseForm<ProfileDto> getUserProfile(@PathVariable String userId) {
-        ProfileDto userProfile = userService.getUserProfile(userId);
+    public ResponseForm<ProfileDTO> getUserProfile(@PathVariable String userId) {
+        ProfileDTO userProfile = userService.getUserProfile(userId);
         return new ResponseForm<>(HttpStatus.OK, userProfile, "User profile retrieved successfully");
     }
 

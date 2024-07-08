@@ -1,14 +1,12 @@
 package com.botox.service;
 
-import com.botox.domain.ProfileDto;
+import com.botox.domain.ProfileDTO;
 import com.botox.domain.User;
 import com.botox.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -44,9 +42,9 @@ public class UserService {
     }
 
     // userProfile 조회
-    public ProfileDto getUserProfile(String userId) {
+    public ProfileDTO getUserProfile(String userId) {
         User user = userRepository.findByUserId(userId).orElseThrow(() -> new RuntimeException("User not found"));
-        return new ProfileDto(user.getUserNickname(),user.getUserProfile(), user.getUserProfilePic());
+        return new ProfileDTO(userId,user.getUserNickname(),user.getUserProfile(), user.getUserProfilePic());
     }
 
 }
