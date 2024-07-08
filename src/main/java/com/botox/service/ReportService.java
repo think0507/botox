@@ -8,7 +8,6 @@ import com.botox.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestBody;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -51,11 +50,11 @@ public class ReportService {
         response.setReportType(savedReport.getReportType());
         response.setProcessingStatus(savedReport.getProcessingStatus());
 
-        UserIdOnlyDTO reportingUserDTO = new UserIdOnlyDTO();
+        ReportDTO reportingUserDTO = new ReportDTO();
         reportingUserDTO.setId(reportingUser.getId());
         response.setReportingUser(reportingUserDTO);
 
-        UserIdOnlyDTO reportedUserDTO = new UserIdOnlyDTO();
+        ReportDTO reportedUserDTO = new ReportDTO();
         reportedUserDTO.setId(reportedUser.getId());
         response.setReportedUser(reportedUserDTO);
 

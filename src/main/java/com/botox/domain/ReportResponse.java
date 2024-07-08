@@ -10,8 +10,8 @@ import java.time.LocalDateTime;
 public class ReportResponse {
     private Long id;
     private LocalDateTime reportTime;
-    private UserIdOnlyDTO reportingUser;
-    private UserIdOnlyDTO reportedUser;
+    private ReportDTO reportingUser;
+    private ReportDTO reportedUser;
     private String feedbackResult;
     private String reasonForReport;
     private Long reportedPostId;

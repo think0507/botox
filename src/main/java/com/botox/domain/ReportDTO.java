@@ -1,11 +1,9 @@
 package com.botox.domain;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 @Data
-public class UserIdOnlyDTO {
+public class ReportDTO {
     private Long id;
 //    private String UserNickname;
 
