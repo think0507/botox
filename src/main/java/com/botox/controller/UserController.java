@@ -40,12 +40,6 @@ public class UserController {
             return new ResponseForm<>(HttpStatus.BAD_REQUEST, null, "패스워드 확인 값이 일치하지 않습니다.");
         }
 
-    // 유저 조회
-    @GetMapping("/{userId}")
-    public ResponseForm<User> getUserByUserId(@PathVariable String userId) {
-        User user = userService.getUserByUserId(userId).orElseThrow(() -> new RuntimeException("User not found"));
-        return new ResponseForm<>(HttpStatus.OK, user, "User retrieved successfully");
-    }
         // 2. 백엔드 validation
         try {
             userService.createUser(userCreateForm);
@@ -70,12 +64,6 @@ public class UserController {
             return new ResponseForm<>(HttpStatus.BAD_REQUEST, null, "유효하지 않은 자격 증명입니다.");
         }
 
-    // 유저 삭제(회원탈퇴)
-    @DeleteMapping("/{userId}")
-    public ResponseForm<Void> deleteUser(@PathVariable String userId) {
-        userService.deleteUser(userId);
-        return new ResponseForm<>(HttpStatus.NO_CONTENT, null, "User deleted successfully");
-    }
         Optional<User> userOptional = userService.findByUserId(loginDTO.getUserId());
         if (userOptional.isEmpty()) {
             return new ResponseForm<>(HttpStatus.UNAUTHORIZED, null, "유효하지 않은 사용자 ID 입니다.");
@@ -86,13 +74,6 @@ public class UserController {
             return new ResponseForm<>(HttpStatus.UNAUTHORIZED, null, "유효하지 않은 사용자 비밀번호입니다.");
         }
 
-    // userProfile 수정 또는 생성
-    @PatchMapping("/{userId}/profile")
-    public ResponseForm<User> updateUserProfile(@PathVariable String userId, @RequestBody Map<String, String> updates) {
-        String userProfile = updates.get("userProfile");
-        String userProfilePic = updates.get("userProfilePic");
-        User updatedUser = userService.updateUserProfile(userId,userProfile, userProfilePic);
-        return new ResponseForm<>(HttpStatus.OK, updatedUser, "User profile updated successfully");
         try {
             LoginResponseDTO loginResponse = userService.getAccessToken(user, loginDTO.getPassword());
             if (loginResponse == null) {
@@ -104,13 +85,8 @@ public class UserController {
         }
     }
 
-    // userProfile 삭제
-    @DeleteMapping("/{userId}/profile")
-    public ResponseForm<User> deleteUserProfile(@PathVariable String userId) {
-        User updatedUser = userService.deleteUserProfile(userId);
-        return new ResponseForm<>(HttpStatus.OK, updatedUser, "User profile deleted successfully");
     @PostMapping("/logout")
-    public ResponseForm<String> logout(@RequestBody Map<String, String> request) {
+    public ResponseForm<String> logout (@RequestBody Map < String, String > request){
         String userId = request.get("userId");
         try {
             userService.logout(userId);
@@ -122,13 +98,8 @@ public class UserController {
         }
     }
 
-    // userProfile 조회
-    @GetMapping("/{userId}/profile")
-    public ResponseForm<ProfileDTO> getUserProfile(@PathVariable String userId) {
-        ProfileDTO userProfile = userService.getUserProfile(userId);
-        return new ResponseForm<>(HttpStatus.OK, userProfile, "User profile retrieved successfully");
     @PostMapping("/refresh")
-    public ResponseForm<LoginResponseDTO> refreshAccessToken(@RequestBody Map<String, String> request) {
+    public ResponseForm<LoginResponseDTO> refreshAccessToken (@RequestBody Map < String, String > request){
         String userId = request.get("userId");
         String refreshToken = request.get("refreshToken");
         try {
@@ -143,7 +114,9 @@ public class UserController {
     }
 
     @GetMapping("/protected-resource")
-    public ResponseForm<String> getProtectedResource(@RequestHeader(value = "Authorization", required = false) String authorization, HttpServletRequest request, HttpServletResponse response) {
+    public ResponseForm<String> getProtectedResource
+    (@RequestHeader(value = "Authorization", required = false) String authorization, HttpServletRequest
+    request, HttpServletResponse response){
         String token = Optional.ofNullable(authorization).map(auth -> auth.replace("Bearer ", "")).orElse("");
         boolean isTokenValid = userService.validateAccessToken(token);
 
@@ -153,4 +126,47 @@ public class UserController {
             return new ResponseForm<>(HttpStatus.FORBIDDEN, null, "유효하지 않은 토큰입니다.");
         }
     }
+
+
+    // 유저 조회
+    @GetMapping("/{userId}")
+    public ResponseForm<User> getUserByUserId(@PathVariable String userId) {
+        User user = userService.getUserByUserId(userId).orElseThrow(() -> new RuntimeException("User not found"));
+        return new ResponseForm<>(HttpStatus.OK, user, "User retrieved successfully");
+    }
+
+    // 유저 삭제(회원탈퇴)
+    @DeleteMapping("/{userId}")
+    public ResponseForm<Void> deleteUser(@PathVariable String userId) {
+        userService.deleteUser(userId);
+        return new ResponseForm<>(HttpStatus.NO_CONTENT, null, "User deleted successfully");
+    }
+
+    // userProfile 수정 또는 생성
+    @PatchMapping("/{userId}/profile")
+    public ResponseForm<User> updateUserProfile (
+            @PathVariable String userId,
+            @RequestBody Map < String, String > updates) {
+        String userProfile = updates.get("userProfile");
+        String userProfilePic = updates.get("userProfilePic");
+        User updatedUser = userService.updateUserProfile(userId, userProfile, userProfilePic);
+        return new ResponseForm<>(HttpStatus.OK, updatedUser, "User profile updated successfully");
+    }
+
+    // userProfile 삭제
+    @DeleteMapping("/{userId}/profile")
+    public ResponseForm<User> deleteUserProfile (@PathVariable String userId){
+        User updatedUser = userService.deleteUserProfile(userId);
+        return new ResponseForm<>(HttpStatus.OK, updatedUser, "User profile deleted successfully");
+
+
+    }
+
+    // userProfile 조회
+    @GetMapping("/{userId}/profile")
+    public ResponseForm<ProfileDTO> getUserProfile (@PathVariable String userId) {
+        ProfileDTO userProfile = userService.getUserProfile(userId);
+        return new ResponseForm<>(HttpStatus.OK, userProfile, "User profile retrieved successfully");
+    }
 }
+

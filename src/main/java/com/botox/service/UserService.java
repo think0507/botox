@@ -15,6 +15,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.util.Optional;
@@ -33,9 +34,6 @@ public class UserService implements UserDetailsService {
         newUser.setPassword(passwordEncoder.encode(userCreateForm.getPassword1()));
         newUser.setUserNickname(userCreateForm.getUserNickName());
 
-    // 특정 유저 조회
-    public Optional<User> getUserByUserId(String userId) {
-        return userRepository.findByUserId(userId);
         validateDuplicateUser(newUser);
         userRepository.save(newUser);
         return userCreateForm;
@@ -45,7 +43,7 @@ public class UserService implements UserDetailsService {
         return userRepository.existsByUserNickname(userNickname);
     }
 
-    public boolean existsByEmail(String userId) {
+    public boolean existsByUserId(String userId) {
         return userRepository.existsByUserId(userId);
     }
 
@@ -53,7 +51,7 @@ public class UserService implements UserDetailsService {
         if (existsByUserNickname(user.getUserNickname())) {
             throw new IllegalStateException("이미 존재하는 userNickname 입니다.");
         }
-        if (existsByEmail(user.getUserId())) {
+        if (existsByUserId(user.getUserId())) {
             throw new IllegalStateException("이미 존재하는 userId 입니다.");
         }
     }
@@ -67,21 +65,11 @@ public class UserService implements UserDetailsService {
         return SpringUser.getSpringUserDetails(registeredUser.get());
     }
 
-    // 유저 삭제
-    @Transactional
-    public void deleteUser(String userId) {
-        userRepository.deleteByUserId(userId);
     public Optional<User> findByUserId(String userId) {
         return userRepository.findByUserId(userId);
     }
 
-    // userProfile 생성 또는 수정
-    public User updateUserProfile(String userId, String userProfile, String userProfilePic) {
-        User user = userRepository.findByUserId(userId).orElseThrow(() -> new RuntimeException("User not found"));
-        user.setUserProfile(userProfile);
-        user.setUserProfilePic(userProfilePic);
-        return userRepository.save(user);
-    }
+
     public LoginResponseDTO getAccessToken(User user, String rawPassword) {
         UserDetails userDetails;
         try {
@@ -90,18 +78,13 @@ public class UserService implements UserDetailsService {
             return null;
         }
 
-    // userProfile 삭제
-    public User deleteUserProfile(String userId) {
-        User user = userRepository.findByUserId(userId).orElseThrow(() -> new RuntimeException("User not found"));
-        user.setUserProfile(null);
-        user.setUserProfilePic(null);
-        return userRepository.save(user);
+
         if (passwordEncoder.matches(rawPassword, userDetails.getPassword())) {
-            String accessToken = tokenProvider.generateAccessToken(user, Duration.ofMinutes(1));
+            String accessToken = tokenProvider.generateAccessToken(user, Duration.ofMinutes(3));
             String refreshToken = tokenProvider.generateRefreshToken(user, Duration.ofDays(7));
             updateUserStatus(user.getUserId(), UserStatus.ONLINE);
 
-            redisTemplate.opsForValue().set("TOKEN:" + user.getUserId(), accessToken, Duration.ofMinutes(1));
+            redisTemplate.opsForValue().set("TOKEN:" + user.getUserId(), accessToken, Duration.ofMinutes(3));
             redisTemplate.opsForValue().set("REFRESH_TOKEN:" + user.getUserId(), refreshToken, Duration.ofDays(7));
 
             return new LoginResponseDTO(user.getUserId(), user.getPassword(), accessToken, refreshToken, UserStatus.ONLINE);
@@ -109,13 +92,6 @@ public class UserService implements UserDetailsService {
         return null;
     }
 
-    // userProfile 조회
-    public ProfileDTO getUserProfile(String userId) {
-        User user = userRepository.findByUserId(userId).orElseThrow(() -> new RuntimeException("User not found"));
-        return new ProfileDTO(userId,user.getUserNickname(),user.getUserProfile(), user.getUserProfilePic());
-    }
-
-}
     public void logout(String userId) {
         Optional<User> userOptional = userRepository.findByUserId(userId);
         if (userOptional.isPresent()) {
@@ -135,12 +111,12 @@ public class UserService implements UserDetailsService {
             Optional<User> userOptional = userRepository.findByUserId(userId);
             if (userOptional.isPresent()) {
                 User user = userOptional.get();
-                String newAccessToken = tokenProvider.generateAccessToken(user, Duration.ofMinutes(1));
+                String newAccessToken = tokenProvider.generateAccessToken(user, Duration.ofMinutes(3));
 
-                redisTemplate.opsForValue().set("TOKEN:" + userId, newAccessToken, Duration.ofMinutes(1));
+                redisTemplate.opsForValue().set("TOKEN:" + userId, newAccessToken, Duration.ofMinutes(3));
                 redisTemplate.opsForValue().set("REFRESH_TOKEN:" + userId, refreshToken, Duration.ofDays(7));
 
-                return new LoginResponseDTO(user.getUserId(), user.getPassword(), newAccessToken, refreshToken,user.getStatus());
+                return new LoginResponseDTO(user.getUserId(), user.getPassword(), newAccessToken, refreshToken, user.getStatus());
             }
         }
         return null;
@@ -158,5 +134,41 @@ public class UserService implements UserDetailsService {
             userRepository.save(user);
         }
     }
+
+    // 특정 유저 조회
+    public Optional<User> getUserByUserId(String userId) {
+        return userRepository.findByUserId(userId);
+    }
+
+    // 유저 삭제
+    @Transactional
+    public void deleteUser (String userId){
+        userRepository.deleteByUserId(userId);
+    }
+
+    // userProfile 생성 또는 수정
+    public User updateUserProfile(String userId, String userProfile, String userProfilePic) {
+        User user = userRepository.findByUserId(userId).orElseThrow(() -> new RuntimeException("User not found"));
+        user.setUserProfile(userProfile);
+        user.setUserProfilePic(userProfilePic);
+        return userRepository.save(user);
+    }
+    // userProfile 삭제
+
+    public User deleteUserProfile (String userId) {
+        User user = userRepository.findByUserId(userId).orElseThrow(() -> new RuntimeException("User not found"));
+        user.setUserProfile(null);
+        user.setUserProfilePic(null);
+        return userRepository.save(user);
+    }
+
+    // userProfile 조회
+    public ProfileDTO getUserProfile (String userId){
+        User user = userRepository.findByUserId(userId).orElseThrow(() -> new RuntimeException("User not found"));
+        return new ProfileDTO(userId, user.getUserNickname(), user.getUserProfile(), user.getUserProfilePic());
+    }
 }
+
+
+
 

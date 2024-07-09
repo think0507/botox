@@ -34,10 +34,10 @@ public class SecurityConfig {
                         authorizeHttpRequests
                                 .requestMatchers(
                                         "/",
-                                        "/users/signup",
-                                        "/users/login",
-                                        "/users/refresh",
-                                        "/users/logout"
+                                        "/api/users/signup",
+                                        "/api/users/login",
+                                        "/api/users/refresh",
+                                        "/api/users/logout"
                                 ).permitAll()
                                 .anyRequest().authenticated()
                 )
@@ -79,10 +79,10 @@ public class SecurityConfig {
     public TokenAuthenticationFilter tokenAuthenticationFilter() {
         List<String> excludedPaths = List.of(
                 "/",
-                "/users/signup",
-                "/users/login",
-                "/users/refresh",
-                "/users/logout"
+                "/api/users/signup",
+                "/api/users/login",
+                "/api/users/refresh",
+                "/api/users/logout"
         );
         return new TokenAuthenticationFilter(tokenProvider, excludedPaths);
     }

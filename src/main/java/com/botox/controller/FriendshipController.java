@@ -19,12 +19,12 @@ public class FriendshipController {
 
     @PostMapping("/request")
     public ResponseEntity<String> sendFriendRequest(@RequestBody FriendshipRequestCreateRequest request) {
-        if (friendshipService.isAlreadyFriendsOrPending(request.getSenderId(), request.getReceiverId())) {
-            return new ResponseEntity<>("Friend request already sent or you are already friends", HttpStatus.BAD_REQUEST);
+        try {
+            FriendshipRequestDTO friendshipRequestDTO = friendshipService.sendFriendRequest(request);
+            return new ResponseEntity<>("Friend request sent successfully", HttpStatus.CREATED);
+        } catch (IllegalStateException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
         }
-
-        FriendshipRequestDTO friendshipRequestDTO = friendshipService.sendFriendRequest(request);
-        return new ResponseEntity<>("Friend request sent successfully", HttpStatus.CREATED);
     }
 
     @GetMapping("/requests/{userId}")
@@ -49,5 +49,15 @@ public class FriendshipController {
     public ResponseEntity<List<FriendshipRequestDTO>> getFriends(@PathVariable Long userId) {
         List<FriendshipRequestDTO> friends = friendshipService.getFriends(userId);
         return new ResponseEntity<>(friends, HttpStatus.OK);
+    }
+
+    @DeleteMapping("/remove")
+    public ResponseEntity<String> removeFriend(@RequestParam Long userId, @RequestParam Long friendId) {
+        if (!friendshipService.isAlreadyFriends(userId, friendId)) {
+            return new ResponseEntity<>("Not friends", HttpStatus.BAD_REQUEST);
+        }
+
+        friendshipService.removeFriend(userId, friendId);
+        return new ResponseEntity<>("Friend removed successfully", HttpStatus.OK);
     }
 }
