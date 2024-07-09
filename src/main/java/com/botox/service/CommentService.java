@@ -57,4 +57,16 @@ public class CommentService {
 
         commentRepository.delete(comment);
     }
+
+    //댓글 좋아요 기능
+    @Transactional
+    public Comment likeComment(Long commentId){
+        Comment comment = commentRepository.findById(commentId)
+                .orElseThrow(
+                        ()-> new NotFoundCommentException("Comment not found")
+                );
+
+        comment.setLikesCount(comment.getLikesCount()+1);
+        return commentRepository.save(comment);
+    }
 }

@@ -1,5 +1,4 @@
 package com.botox.domain;
-
 import com.botox.constant.RoomStatus;
 import com.botox.constant.RoomType;
 import jakarta.persistence.*;

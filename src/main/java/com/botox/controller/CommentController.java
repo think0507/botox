@@ -1,9 +1,11 @@
 package com.botox.controller;
 
 import com.botox.domain.Comment;
-import com.botox.domain.Room;
+import com.botox.domain.Report;
+import com.botox.constant.ReportType;
 import com.botox.exception.NotFoundCommentException;
 import com.botox.service.CommentService;
+import com.botox.service.CommentReportService;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -12,7 +14,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
-import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,21 +23,20 @@ import java.util.List;
 @RequestMapping("/api")
 public class CommentController {
     private final CommentService commentService;
+    private final CommentReportService commentReportService;
 
-    //댓글 작성 기능
     @PostMapping("/comments")
     public ResponseForm<CommentForm> createComment(@RequestBody CommentForm commentForm){
-        try{
-        Comment comment = commentService.createComment(commentForm);
-        CommentForm createCommentForm = convertToCommentForm(comment);
-        return new ResponseForm<>(HttpStatus.OK,createCommentForm,"댓글 등록을 성공적으로 완료했습니다!");
-    } catch (Exception e){
+        try {
+            Comment comment = commentService.createComment(commentForm);
+            CommentForm createCommentForm = convertToCommentForm(comment);
+            return new ResponseForm<>(HttpStatus.OK, createCommentForm, "댓글 등록을 성공적으로 완료했습니다!");
+        } catch (Exception e) {
             log.error("Unexpected error", e);
             return new ResponseForm<>(HttpStatus.INTERNAL_SERVER_ERROR, null, "Unexpected error occurred.");
         }
     }
 
-    //특정 게시물에 대한 댓글 조회
     @GetMapping("/posts/{postId}/comments")
     public ResponseForm<List<CommentForm>> getCommentsByPostId(@PathVariable Long postId) {
         try {
@@ -48,7 +48,6 @@ public class CommentController {
                 commentForms.add(commentForm);
             }
 
-            // 상태 코드, 데이터, 메시지를 포함한 응답 반환
             return new ResponseForm<>(HttpStatus.OK, commentForms, "OK");
         } catch (NotFoundCommentException e) {
             return new ResponseForm<>(HttpStatus.NO_CONTENT, null, e.getMessage());
@@ -58,7 +57,6 @@ public class CommentController {
         }
     }
 
-    //댓글 삭제 기능
     @DeleteMapping("/comments/{commentId}")
     public ResponseForm<Void> deleteComment(@PathVariable Long commentId) {
         try {
@@ -72,7 +70,17 @@ public class CommentController {
         }
     }
 
-
+    @PostMapping("/comments/{commentId}/report")
+    public ResponseForm<ReportForm> reportComment(@PathVariable Long commentId, @RequestBody ReportForm reportForm) {
+        try {
+            reportForm.setReportedContentId(commentId);
+            ReportForm reportedForm = commentReportService.reportComment(reportForm);
+            return new ResponseForm<>(HttpStatus.OK, reportedForm, "댓글 신고가 성공적으로 접수되었습니다.");
+        } catch (Exception e) {
+            log.error("Unexpected error", e);
+            return new ResponseForm<>(HttpStatus.INTERNAL_SERVER_ERROR, null, "Unexpected error occurred.");
+        }
+    }
 
     private CommentForm convertToCommentForm(Comment comment) {
         return CommentForm.builder()
@@ -87,13 +95,26 @@ public class CommentController {
     @Data
     @Builder
     @AllArgsConstructor
-    public static class CommentForm{
+    public static class CommentForm {
         private Long authorId;
         private Long postId;
         private String commentContent;
         private Integer likesCount;
         private Long commentId;
+    }
 
+    @Data
+    @Builder
+    @AllArgsConstructor
+    public static class ReportForm {
+        private Long reportingUserId;
+        private String reportingUserNickname;
+        private Long reportedUserId;
+        private String reportedUserNickname;
+        private Long reportedContentId;
+        private String feedbackResult;
+        private String reasonForReport;
+        private ReportType reportType;
     }
 
     @Data
@@ -103,7 +124,4 @@ public class CommentController {
         private T data;
         private String message;
     }
-
-
-
 }

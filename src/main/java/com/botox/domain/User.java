@@ -33,7 +33,6 @@ public class User {
     @Column(name = "user_password")
     private String password;
 
-
     @Enumerated(EnumType.STRING)
     private UserStatus status; // enum: ONLINE, OFFLINE
 
@@ -43,4 +42,9 @@ public class User {
     @OneToMany(mappedBy = "sender")
     private List<Chat> sentChats;
 
+    @OneToMany(mappedBy = "reportingUser")
+    private List<Report> reportsFiled;
+
+    @OneToMany(mappedBy = "reportedUser")
+    private List<Report> reportsReceived;
 }
