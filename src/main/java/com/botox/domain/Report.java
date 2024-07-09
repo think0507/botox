@@ -5,41 +5,42 @@ import com.botox.constant.ReportType;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-
 import java.time.LocalDateTime;
 
 @Entity
-@Getter @Setter
 @Table(name = "report")
+@Getter @Setter
 public class Report {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "report_id")
     private Long reportId;
 
+    @Column(name = "report_time")
     private LocalDateTime reportTime;
 
     @ManyToOne
-    @JoinColumn(name = "reporting_user_id")
+    @JoinColumn(name = "reporting_user_id", referencedColumnName = "user_id")
     private User reportingUser;
 
-    // reported_user_id를 FK가 아닌 일반 컬럼으로 관리
-    @Column(name = "reported_user_id")
-    private Long reportedUserId;
+    @ManyToOne
+    @JoinColumn(name = "reported_user_id", referencedColumnName = "user_id")
+    private User reportedUser;
 
+    @Column(name = "feedback_result")
     private String feedbackResult;
+
+    @Column(name = "reason_for_report", columnDefinition = "TEXT")
     private String reasonForReport;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "report_type")
     private ReportType reportType;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "processing_status")
     private ProcessingStatus processingStatus;
 
-    // 신고된 콘텐츠에 대한 참조
     @Column(name = "reported_content_id")
     private Long reportedContentId;
-
-    // Getters, setters, constructors
-
-
 }

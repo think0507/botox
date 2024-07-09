@@ -3,15 +3,15 @@ package com.botox.domain;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-
 import java.time.LocalDateTime;
 
 @Entity
-@Getter @Setter
 @Table(name = "chat")
+@Getter @Setter
 public class Chat {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "chat_id")
     private Long chatId;
 
     @ManyToOne
@@ -19,16 +19,11 @@ public class Chat {
     private Room room;
 
     @ManyToOne
-    @JoinColumn(name = "sender_id")
+    @JoinColumn(name = "sender_id", referencedColumnName = "user_id")
     private User sender;
 
     @Column(columnDefinition = "TEXT")
-    private String content;  // Long에서 String으로 변경
+    private String content;
 
     private LocalDateTime timestamp;
-
-    @ManyToOne
-    @JoinColumn(name = "inappropriate_report_id")
-    private Report inappropriateReport;
 }
-
