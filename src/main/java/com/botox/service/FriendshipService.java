@@ -36,11 +36,13 @@ public class FriendshipService {
     }
 
     public boolean isAlreadyFriendsOrPending(Long senderId, Long receiverId) {
-        List<Friendship> friendships = friendshipRepository.findByAcceptedUserIdOrRequestedUserId(senderId, receiverId);
+        // Check if users are already friends
+        List<Friendship> friendships = friendshipRepository.findByAcceptedUserIdOrRequestedUserId(senderId, senderId);
         boolean alreadyFriends = friendships.stream()
                 .anyMatch(friendship -> (friendship.getAcceptedUser().getId().equals(receiverId) && friendship.getRequestedUser().getId().equals(senderId))
                         || (friendship.getAcceptedUser().getId().equals(senderId) && friendship.getRequestedUser().getId().equals(receiverId)));
 
+        // Check if there is a pending friend request
         boolean pendingRequest = friendshipRequestRepository.findBySenderIdAndReceiverIdAndStatus(senderId, receiverId, RequestStatus.PENDING).isPresent()
                 || friendshipRequestRepository.findBySenderIdAndReceiverIdAndStatus(receiverId, senderId, RequestStatus.PENDING).isPresent();
 
@@ -57,7 +59,7 @@ public class FriendshipService {
 
         pendingRequests.addAll(receivedRequests.stream()
                 .map(this::convertToDTO)
-                .toList());
+                .collect(Collectors.toList()));
 
         return pendingRequests;
     }
@@ -87,6 +89,15 @@ public class FriendshipService {
         return friendships.stream()
                 .map(this::convertToFriendshipDTO)
                 .collect(Collectors.toList());
+    }
+
+    public void deleteFriend(Long userId, Long friendId) {
+        List<Friendship> friendships = friendshipRepository.findByAcceptedUserIdOrRequestedUserId(userId, userId);
+        friendships.stream()
+                .filter(friendship -> (friendship.getAcceptedUser().getId().equals(friendId) && friendship.getRequestedUser().getId().equals(userId))
+                        || (friendship.getAcceptedUser().getId().equals(userId) && friendship.getRequestedUser().getId().equals(friendId)))
+                .findFirst()
+                .ifPresent(friendshipRepository::delete);
     }
 
     private FriendshipRequestDTO convertToDTO(FriendshipRequest friendshipRequest) {

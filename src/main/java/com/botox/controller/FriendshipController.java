@@ -50,4 +50,10 @@ public class FriendshipController {
         List<FriendshipRequestDTO> friends = friendshipService.getFriends(userId);
         return new ResponseEntity<>(friends, HttpStatus.OK);
     }
+
+    @DeleteMapping("/list/{userId}/{friendId}")
+    public ResponseEntity<Void> deleteFriend(@PathVariable Long userId, @PathVariable Long friendId) {
+        friendshipService.deleteFriend(userId, friendId);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
 }
