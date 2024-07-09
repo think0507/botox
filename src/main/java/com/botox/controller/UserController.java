@@ -38,8 +38,8 @@ public class UserController {
             @RequestBody Map<String, String> updates) {
         String userProfile = updates.get("userProfile");
         String userProfilePic = updates.get("userProfilePic");
-        String userNickname = updates.get("userNickname");
-        ProfileDTO updatedProfile = userService.updateUserProfile(userId, userProfile, userProfilePic,userNickname);
+//        String userNickname = updates.get("userNickname");
+        ProfileDTO updatedProfile = userService.updateUserProfile(userId, userProfile, userProfilePic);
         return new ResponseForm<>(HttpStatus.OK, updatedProfile, "User profile updated successfully");
     }
 

@@ -37,11 +37,11 @@ public class UserService {
     }
 
     // userProfile 생성 또는 수정
-    public ProfileDTO updateUserProfile(String userId, String userProfile, String userProfilePic, String userNickname) {
+    public ProfileDTO updateUserProfile(String userId, String userProfile, String userProfilePic) {
         User user = userRepository.findByUserId(userId).orElseThrow(() -> new RuntimeException("User not found"));
         user.setUserProfile(userProfile);
         user.setUserProfilePic(userProfilePic);
-        user.setUserNickname(userNickname);
+//        user.setUserNickname(userNickname);
         User updatedUser = userRepository.save(user);
         return convertToProfileDTO(updatedUser);
     }
