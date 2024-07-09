@@ -30,5 +30,7 @@ public class Post {
 
     private int commentCnt;
 
+
+
     // Getters, setters, constructors
 }
