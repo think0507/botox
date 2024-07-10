@@ -3,11 +3,16 @@ package com.botox.domain;
 import com.botox.constant.ProcessingStatus;
 import com.botox.constant.ReportType;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
+
 import java.time.LocalDateTime;
 
 @Entity
+@Getter @Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+
 @Table(name = "report")
 @Getter @Setter
 public class Report {
@@ -24,7 +29,8 @@ public class Report {
     private User reportingUser;
 
     @ManyToOne
-    @JoinColumn(name = "reported_user_id", referencedColumnName = "user_id")
+    @JoinColumn(name = "reported_user_id")
+
     private User reportedUser;
 
     @Column(name = "feedback_result")

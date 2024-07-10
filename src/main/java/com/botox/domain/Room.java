@@ -1,5 +1,4 @@
 package com.botox.domain;
-
 import com.botox.constant.RoomStatus;
 import com.botox.constant.RoomType;
 import jakarta.persistence.*;
@@ -21,6 +20,8 @@ public class Room {
 
     @Column(name = "room_content", columnDefinition = "TEXT")
     private String roomContent;
+
+    private Integer roomUserCount=0;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "room_type")

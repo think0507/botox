@@ -13,6 +13,8 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+
+
     @Column(name = "user_id", unique = true)
     private String userId;
 
@@ -25,10 +27,29 @@ public class User {
     @Column(name = "user_temperature_level")
     private Integer userTemperatureLevel;
 
+
     @Column(name = "user_nickname")
     private String userNickname;
 
+    @Column(name = "user_password")
     private String password;
+
+    @Enumerated(EnumType.STRING)
+    private UserStatus status; // enum: ONLINE, OFFLINE
+
+    @OneToMany(mappedBy = "author")
+    private List<Post> posts;
+
+    @OneToMany(mappedBy = "sender")
+    private List<Chat> sentChats;
+
+    @OneToMany(mappedBy = "reportingUser")
+    private List<Report> reportsFiled;
+
+    @OneToMany(mappedBy = "reportedUser")
+    private List<Report> reportsReceived;
+
+   
 
     @Enumerated(EnumType.STRING)
     private UserStatus status;
