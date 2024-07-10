@@ -35,4 +35,13 @@ public class Post {
 
     @Column(name = "comment_cnt")
     private Integer commentCnt;
+
+    @PrePersist
+    protected void onCreate() {
+        date = LocalDateTime.now();
+    }
+
+    public Long getId() {
+        return this.postId;
+    }
 }
