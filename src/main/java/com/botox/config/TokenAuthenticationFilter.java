@@ -24,14 +24,9 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
     private static final String TOKEN_PREFIX = "Bearer ";
 
     @Override
-    protected void doFilterInternal(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            FilterChain filterChain
-    ) throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         String requestURI = request.getRequestURI();
 
-        // 인증이 필요없는 경로는 토큰 검증을 생략
         if (excludedPaths.contains(requestURI)) {
             filterChain.doFilter(request, response);
             return;

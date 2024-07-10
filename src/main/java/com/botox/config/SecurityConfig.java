@@ -4,8 +4,6 @@ import com.botox.config.jwt.TokenProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -21,6 +19,8 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.List;
 
+import static org.springframework.security.config.Customizer.withDefaults;
+
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
@@ -30,30 +30,22 @@ public class SecurityConfig {
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .authorizeHttpRequests(authorizeHttpRequests ->
-                        authorizeHttpRequests
-                                .requestMatchers(
-                                        "/",
-                                        "/api/users/signup",
-                                        "/api/users/login",
-                                        "/api/users/refresh",
-                                        "/api/users/logout"
-                                ).permitAll()
-                                .anyRequest().authenticated()
+                .authorizeHttpRequests(authorize -> authorize
+                        .requestMatchers(
+                                "/",
+                                "/api/users/signup",
+                                "/api/users/login",
+                                "/api/users/refresh",
+                                "/api/users/logout").permitAll()
+                        .anyRequest().authenticated()
                 )
-                .cors(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
-                .headers(headers ->
-                        headers.addHeaderWriter(
-                                new XFrameOptionsHeaderWriter(
-                                        XFrameOptionsHeaderWriter.XFrameOptionsMode.SAMEORIGIN
-                                )
-                        )
+                .headers(headers -> headers
+                        .addHeaderWriter(new XFrameOptionsHeaderWriter(XFrameOptionsHeaderWriter.XFrameOptionsMode.SAMEORIGIN))
                 )
-                .sessionManagement(session ->
-                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                )
-                .addFilterBefore(tokenAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .addFilterBefore(tokenAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
+                .cors(withDefaults());
 
         return http.build();
     }
@@ -77,13 +69,11 @@ public class SecurityConfig {
 
     @Bean
     public TokenAuthenticationFilter tokenAuthenticationFilter() {
-        List<String> excludedPaths = List.of(
+        return new TokenAuthenticationFilter(tokenProvider, List.of(
                 "/",
                 "/api/users/signup",
                 "/api/users/login",
                 "/api/users/refresh",
-                "/api/users/logout"
-        );
-        return new TokenAuthenticationFilter(tokenProvider, excludedPaths);
+                "/api/users/logout"));
     }
 }

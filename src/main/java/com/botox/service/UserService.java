@@ -1,13 +1,9 @@
 package com.botox.service;
 
-import com.botox.domain.ProfileDTO;
-import com.botox.config.jwt.TokenProvider;
 import com.botox.constant.UserStatus;
-import com.botox.domain.LoginResponseDTO;
-import com.botox.domain.SpringUser;
-import com.botox.domain.User;
-import com.botox.domain.UserCreateForm;
+import com.botox.domain.*;
 import com.botox.repository.UserRepository;
+import com.botox.config.jwt.TokenProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -69,7 +65,6 @@ public class UserService implements UserDetailsService {
         return userRepository.findByUserId(userId);
     }
 
-
     public LoginResponseDTO getAccessToken(User user, String rawPassword) {
         UserDetails userDetails;
         try {
@@ -78,13 +73,12 @@ public class UserService implements UserDetailsService {
             return null;
         }
 
-
         if (passwordEncoder.matches(rawPassword, userDetails.getPassword())) {
-            String accessToken = tokenProvider.generateAccessToken(user, Duration.ofMinutes(3));
+            String accessToken = tokenProvider.generateAccessToken(user, Duration.ofMinutes(10));
             String refreshToken = tokenProvider.generateRefreshToken(user, Duration.ofDays(7));
             updateUserStatus(user.getUserId(), UserStatus.ONLINE);
 
-            redisTemplate.opsForValue().set("TOKEN:" + user.getUserId(), accessToken, Duration.ofMinutes(3));
+            redisTemplate.opsForValue().set("TOKEN:" + user.getUserId(), accessToken, Duration.ofMinutes(10));
             redisTemplate.opsForValue().set("REFRESH_TOKEN:" + user.getUserId(), refreshToken, Duration.ofDays(7));
 
             return new LoginResponseDTO(user.getUserId(), user.getPassword(), accessToken, refreshToken, UserStatus.ONLINE);
@@ -111,9 +105,10 @@ public class UserService implements UserDetailsService {
             Optional<User> userOptional = userRepository.findByUserId(userId);
             if (userOptional.isPresent()) {
                 User user = userOptional.get();
-                String newAccessToken = tokenProvider.generateAccessToken(user, Duration.ofMinutes(3));
+                String newAccessToken = tokenProvider.generateAccessToken(user, Duration.ofMinutes(10));
 
-                redisTemplate.opsForValue().set("TOKEN:" + userId, newAccessToken, Duration.ofMinutes(3));
+                redisTemplate.opsForValue().set("TOKEN:" + userId, newAccessToken, Duration.ofMinutes(10
+                    ));
                 redisTemplate.opsForValue().set("REFRESH_TOKEN:" + userId, refreshToken, Duration.ofDays(7));
 
                 return new LoginResponseDTO(user.getUserId(), user.getPassword(), newAccessToken, refreshToken, user.getStatus());
@@ -135,40 +130,62 @@ public class UserService implements UserDetailsService {
         }
     }
 
-    // 특정 유저 조회
-    public Optional<User> getUserByUserId(String userId) {
-        return userRepository.findByUserId(userId);
+
+    public Optional<UserDTO> getUserByUserId(String userId) {
+        return userRepository.findByUserId(userId).map(this::convertToDTO);
     }
 
     // 유저 삭제
     @Transactional
-    public void deleteUser (String userId){
+    public void deleteUser(String userId) {
         userRepository.deleteByUserId(userId);
     }
-
-    // userProfile 생성 또는 수정
-    public User updateUserProfile(String userId, String userProfile, String userProfilePic) {
-        User user = userRepository.findByUserId(userId).orElseThrow(() -> new RuntimeException("User not found"));
-        user.setUserProfile(userProfile);
-        user.setUserProfilePic(userProfilePic);
-        return userRepository.save(user);
-    }
-    // userProfile 삭제
-
-    public User deleteUserProfile (String userId) {
-        User user = userRepository.findByUserId(userId).orElseThrow(() -> new RuntimeException("User not found"));
-        user.setUserProfile(null);
-        user.setUserProfilePic(null);
-        return userRepository.save(user);
-    }
-
     // userProfile 조회
-    public ProfileDTO getUserProfile (String userId){
+    public ProfileDTO getUserProfile(String userId) {
         User user = userRepository.findByUserId(userId).orElseThrow(() -> new RuntimeException("User not found"));
         return new ProfileDTO(userId, user.getUserNickname(), user.getUserProfile(), user.getUserProfilePic());
     }
+
+    // userProfile 생성 또는 수정
+    public ProfileDTO updateUserProfile(String userId, String userProfile, String userProfilePic, String userNickname) {
+        User user = userRepository.findByUserId(userId).orElseThrow(() -> new RuntimeException("User not found"));
+        user.setUserProfile(userProfile);
+        user.setUserProfilePic(userProfilePic);
+        user.setUserNickname(userNickname);
+        User updatedUser = userRepository.save(user);
+        return convertToProfileDTO(updatedUser);
+    }
+
+    // userProfile 삭제
+    public ProfileDTO deleteUserProfile(String userId) {
+        User user = userRepository.findByUserId(userId).orElseThrow(() -> new RuntimeException("User not found"));
+        user.setUserProfile(null);
+        user.setUserProfilePic(null);
+        User updatedUser = userRepository.save(user);
+        return convertToProfileDTO(updatedUser);
+    }
+
+    // User -> ProfileDTO 변환 메서드
+    private ProfileDTO convertToProfileDTO(User user) {
+        ProfileDTO profileDTO = new ProfileDTO();
+        profileDTO.setUserId(user.getUserId());
+        profileDTO.setUserNickname(user.getUserNickname());
+        profileDTO.setUserProfile(user.getUserProfile());
+        profileDTO.setUserProfilePic(user.getUserProfilePic());
+        return profileDTO;
+    }
+
+
+    private UserDTO convertToDTO(User user) {
+        UserDTO userDTO = new UserDTO();
+        userDTO.setId(user.getId());
+        userDTO.setUserId(user.getUserId());
+        userDTO.setUserProfile(user.getUserProfile());
+        userDTO.setUserProfilePic(user.getUserProfilePic());
+        userDTO.setUserTemperatureLevel(user.getUserTemperatureLevel());
+        userDTO.setUserNickname(user.getUserNickname());
+        userDTO.setStatus(user.getStatus());
+        return userDTO;
+    }
+
 }
-
-
-
-

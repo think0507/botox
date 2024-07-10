@@ -1,7 +1,11 @@
 package com.botox.service;
 
 import com.botox.constant.RequestStatus;
-import com.botox.domain.*;
+import com.botox.domain.Friendship;
+import com.botox.domain.FriendshipRequest;
+import com.botox.domain.FriendshipRequestCreateRequest;
+import com.botox.domain.FriendshipRequestDTO;
+import com.botox.domain.User;
 import com.botox.repository.FriendshipRepository;
 import com.botox.repository.FriendshipRequestRepository;
 import com.botox.repository.UserRepository;
@@ -22,7 +26,6 @@ public class FriendshipService {
     private final FriendshipRequestRepository friendshipRequestRepository;
 
     public FriendshipRequestDTO sendFriendRequest(FriendshipRequestCreateRequest request) {
-        // 이미 친구이거나 친구 요청이 진행 중인지 확인
         if (isAlreadyFriendsOrPending(request.getSenderId(), request.getReceiverId())) {
             throw new IllegalStateException("Friend request already sent or you are already friends");
         }
@@ -42,10 +45,7 @@ public class FriendshipService {
     }
 
     public boolean isAlreadyFriendsOrPending(Long senderId, Long receiverId) {
-        // 이미 친구인지 확인
         boolean alreadyFriends = isAlreadyFriends(senderId, receiverId);
-
-        // 친구 요청이 진행 중인지 확인
         boolean pendingRequest = friendshipRequestRepository.findBySenderIdAndReceiverIdAndStatus(senderId, receiverId, RequestStatus.PENDING).isPresent()
                 || friendshipRequestRepository.findBySenderIdAndReceiverIdAndStatus(receiverId, senderId, RequestStatus.PENDING).isPresent()
                 || friendshipRequestRepository.findBySenderIdAndReceiverIdAndStatus(senderId, receiverId, RequestStatus.ACCEPTED).isPresent()
@@ -104,7 +104,9 @@ public class FriendshipService {
     }
 
     public void removeFriend(Long userId, Long friendId) {
-        List<Friendship> friendships = friendshipRepository.findByAcceptedUserIdOrRequestedUserId(userId, friendId);
+        List<Friendship> friendships = friendshipRepository.findByAcceptedUserIdAndRequestedUserId(userId, friendId);
+        friendships.addAll(friendshipRepository.findByAcceptedUserIdAndRequestedUserId(friendId, userId));
+
         friendships.stream()
                 .filter(friendship -> (friendship.getAcceptedUser().getId().equals(friendId) && friendship.getRequestedUser().getId().equals(userId))
                         || (friendship.getAcceptedUser().getId().equals(userId) && friendship.getRequestedUser().getId().equals(friendId)))
@@ -127,8 +129,8 @@ public class FriendshipService {
         dto.setRequestId(friendship.getId());
         dto.setSenderId(friendship.getRequestedUser().getId());
         dto.setReceiverId(friendship.getAcceptedUser().getId());
-        dto.setRequestTime(null);  // 친구 목록에서 requestTime은 필요하지 않음
-        dto.setStatus(RequestStatus.ACCEPTED);  // 친구 목록에서 status는 항상 ACCEPTED
+        dto.setRequestTime(null);
+        dto.setStatus(RequestStatus.ACCEPTED);
         return dto;
     }
 }

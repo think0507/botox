@@ -129,8 +129,8 @@ public class UserController {
 
     // 유저 조회
     @GetMapping("/{userId}")
-    public ResponseForm<User> getUserByUserId(@PathVariable String userId) {
-        User user = userService.getUserByUserId(userId).orElseThrow(() -> new RuntimeException("User not found"));
+    public ResponseForm<UserDTO> getUserByUserId(@PathVariable String userId) {
+        UserDTO user = userService.getUserByUserId(userId).orElseThrow(() -> new RuntimeException("User not found"));
         return new ResponseForm<>(HttpStatus.OK, user, "User retrieved successfully");
     }
 
@@ -143,24 +143,22 @@ public class UserController {
 
     // userProfile 수정 또는 생성
     @PatchMapping("/{userId}/profile")
-    public ResponseForm<User> updateUserProfile (
+    public ResponseForm<ProfileDTO> updateUserProfile(
             @PathVariable String userId,
-            @RequestBody Map < String, String > updates) {
+            @RequestBody Map<String, String> updates) {
         String userProfile = updates.get("userProfile");
         String userProfilePic = updates.get("userProfilePic");
-        User updatedUser = userService.updateUserProfile(userId, userProfile, userProfilePic);
-        return new ResponseForm<>(HttpStatus.OK, updatedUser, "User profile updated successfully");
+        String userNickname = updates.get("userNickname");
+        ProfileDTO updatedProfile = userService.updateUserProfile(userId, userProfile, userProfilePic,userNickname);
+        return new ResponseForm<>(HttpStatus.OK, updatedProfile, "User profile updated successfully");
     }
 
     // userProfile 삭제
     @DeleteMapping("/{userId}/profile")
-    public ResponseForm<User> deleteUserProfile (@PathVariable String userId){
-        User updatedUser = userService.deleteUserProfile(userId);
-        return new ResponseForm<>(HttpStatus.OK, updatedUser, "User profile deleted successfully");
-
-
+    public ResponseForm<ProfileDTO> deleteUserProfile(@PathVariable String userId) {
+        ProfileDTO updatedProfile = userService.deleteUserProfile(userId);
+        return new ResponseForm<>(HttpStatus.OK, updatedProfile, "User profile deleted successfully");
     }
-
     // userProfile 조회
     @GetMapping("/{userId}/profile")
     public ResponseForm<ProfileDTO> getUserProfile (@PathVariable String userId) {
