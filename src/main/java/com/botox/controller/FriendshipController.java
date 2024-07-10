@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/friendship")
+@RequestMapping("/api/friendship")
 @RequiredArgsConstructor
 public class FriendshipController {
 
@@ -45,14 +45,14 @@ public class FriendshipController {
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
-    @GetMapping("/list/{userId}")
+    @GetMapping("/{userId}")
     public ResponseEntity<List<FriendshipRequestDTO>> getFriends(@PathVariable Long userId) {
         List<FriendshipRequestDTO> friends = friendshipService.getFriends(userId);
         return new ResponseEntity<>(friends, HttpStatus.OK);
     }
 
-    @DeleteMapping("/remove")
-    public ResponseEntity<String> removeFriend(@RequestParam Long userId, @RequestParam Long friendId) {
+    @DeleteMapping("/remove/{userId}/{friendId}")
+    public ResponseEntity<String> removeFriend(@PathVariable Long userId, @PathVariable Long friendId) {
         if (!friendshipService.isAlreadyFriends(userId, friendId)) {
             return new ResponseEntity<>("Not friends", HttpStatus.BAD_REQUEST);
         }

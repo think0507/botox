@@ -71,7 +71,7 @@ public class FriendshipService {
 
         pendingRequests.addAll(receivedRequests.stream()
                 .map(this::convertToDTO)
-                .collect(Collectors.toList()));
+                .toList());
 
         return pendingRequests;
     }
