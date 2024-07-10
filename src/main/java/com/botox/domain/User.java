@@ -14,6 +14,8 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+
+
     @Column(name = "user_id", unique = true)
     private String userId;
 
@@ -25,6 +27,7 @@ public class User {
 
     @Column(name = "user_temperature_level")
     private Integer userTemperatureLevel;
+
 
     @Column(name = "user_nickname")
     private String userNickname;
@@ -46,4 +49,7 @@ public class User {
 
     @OneToMany(mappedBy = "reportedUser")
     private List<Report> reportsReceived;
+
+
+
 }

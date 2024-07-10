@@ -45,6 +45,7 @@ public class Post {
         date = LocalDateTime.now();
     }
 
+
     public Long getId() {
         return this.postId;
     }
