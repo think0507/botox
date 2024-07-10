@@ -3,10 +3,15 @@ package com.botox.domain;
 import com.botox.constant.ProcessingStatus;
 import com.botox.constant.ReportType;
 import jakarta.persistence.*;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
 @Entity
+@Getter @Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Table(name = "report")
 public class Report {
     @Id
@@ -27,10 +32,11 @@ public class Report {
     private String reasonForReport;
 
     @Enumerated(EnumType.STRING)
-    private ReportType reportType; // enum: TEMPORARY_BAN, PERMANENT_BAN, WARNING
+    private ReportType reportType;
 
     @Enumerated(EnumType.STRING)
-    private ProcessingStatus processingStatus; // enum: PENDING, RESOLVED, DISMISSED
+    private ProcessingStatus processingStatus;
 
-    // Getters, setters, constructors
+    @Column(name = "reported_content_id")
+    private Long reportedContentId;
 }

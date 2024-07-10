@@ -1,8 +1,12 @@
 package com.botox.domain;
 
+import com.botox.domain.Post;
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
 @Entity
+@Getter @Setter
 @Table(name = "comment")
 public class Comment {
     @Id
@@ -14,7 +18,8 @@ public class Comment {
     private User author;
 
     @Column(columnDefinition = "TEXT")
-    private String commentContent;
+    private String commentContent;  // Long에서 String으로 변경
+
     private int likesCount;
 
     @ManyToOne

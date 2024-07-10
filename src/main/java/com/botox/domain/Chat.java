@@ -1,10 +1,16 @@
 package com.botox.domain;
 
+import com.botox.domain.Room;
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.NoArgsConstructor;
+
 
 import java.time.LocalDateTime;
 
 @Entity
+@Getter @Setter
 @Table(name = "chat")
 public class Chat {
     @Id
@@ -20,13 +26,12 @@ public class Chat {
     private User sender;
 
     @Column(columnDefinition = "TEXT")
-    private String content;
+    private String content;  // Long에서 String으로 변경
+
     private LocalDateTime timestamp;
 
     @ManyToOne
     @JoinColumn(name = "inappropriate_report_id")
     private Report inappropriateReport;
-
-    // Getters, setters, constructors
 }
 
