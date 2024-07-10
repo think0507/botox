@@ -4,6 +4,7 @@ import com.botox.constant.UserStatus;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import java.util.List;
 
 @Entity
 @Table(name = "users")
@@ -28,8 +29,21 @@ public class User {
     @Column(name = "user_nickname")
     private String userNickname;
 
+    @Column(name = "user_password")
     private String password;
 
     @Enumerated(EnumType.STRING)
-    private UserStatus status;
+    private UserStatus status; // enum: ONLINE, OFFLINE
+
+    @OneToMany(mappedBy = "author")
+    private List<Post> posts;
+
+    @OneToMany(mappedBy = "sender")
+    private List<Chat> sentChats;
+
+    @OneToMany(mappedBy = "reportingUser")
+    private List<Report> reportsFiled;
+
+    @OneToMany(mappedBy = "reportedUser")
+    private List<Report> reportsReceived;
 }

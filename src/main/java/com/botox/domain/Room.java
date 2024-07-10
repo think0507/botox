@@ -1,15 +1,18 @@
 package com.botox.domain;
-
 import com.botox.constant.RoomStatus;
 import com.botox.constant.RoomType;
 import jakarta.persistence.*;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "room")
-@Getter @Setter
+@Getter
+@Setter
+@NoArgsConstructor
 public class Room {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -21,6 +24,8 @@ public class Room {
 
     @Column(name = "room_content", columnDefinition = "TEXT")
     private String roomContent;
+
+    private Integer roomUserCount=0;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "room_type")
@@ -48,6 +53,10 @@ public class Room {
 
     @Column(name = "room_create_at")
     private LocalDateTime roomCreateAt;
+
+    @OneToMany(mappedBy = "room")
+    private List<RoomUser> participants;
+
 
 
 
