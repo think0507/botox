@@ -5,27 +5,28 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.List;
-
 @Entity
-@Getter @Setter
 @Table(name = "users")
+@Getter @Setter
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "user_id")
-    private Long userId;
 
-    @Column(name = "profile")
+
+    @Column(name = "user_id", unique = true)
+    private String userId;
+
+    @Column(name = "user_profile")
     private String userProfile;
 
-    @Column(name = "profile_pic")
+    @Column(name = "user_profile_pic")
     private String userProfilePic;
 
     @Column(name = "user_temperature_level")
-    private int userTemperatureLevel;
+    private Integer userTemperatureLevel;
+
 
     @Column(name = "user_nickname")
     private String userNickname;
@@ -47,4 +48,9 @@ public class User {
 
     @OneToMany(mappedBy = "reportedUser")
     private List<Report> reportsReceived;
+
+   
+
+    @Enumerated(EnumType.STRING)
+    private UserStatus status;
 }

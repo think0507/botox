@@ -121,7 +121,7 @@ public class RoomApiController {
                 .roomContent(room.getRoomContent())
                 .roomType(room.getRoomType())
                 .gameName(room.getGameName())
-                .roomMasterId(room.getRoomMasterId())
+                .roomMasterId(Long.valueOf(room.getRoomMasterId()))
                 .roomStatus(room.getRoomStatus())
                 .roomCapacityLimit(room.getRoomCapacityLimit())
                 .roomUpdateTime(Timestamp.valueOf(room.getRoomUpdateTime()))
