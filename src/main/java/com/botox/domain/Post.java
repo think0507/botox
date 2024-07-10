@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "post")
@@ -32,6 +33,9 @@ public class Post {
     @Enumerated(EnumType.STRING)
     @Column(name = "post_type")
     private PostType postType;
+
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Comment> comments;
 
     @Column(name = "comment_cnt")
     private Integer commentCnt;

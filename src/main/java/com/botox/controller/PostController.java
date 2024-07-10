@@ -5,6 +5,8 @@ import com.botox.constant.PostResponse;
 import com.botox.domain.Post;
 import com.botox.service.PostService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.data.domain.Page;
@@ -42,8 +44,11 @@ public class PostController {
     }
 
     @GetMapping
-    public Page<Post> getAllPosts(Pageable pageable) {
-        return postService.getAllPosts(pageable);
+    public Page<Post> getAllPosts(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        if(size > 50) size = 50;
+        return postService.getAllPosts(PageRequest.of(page, size, Sort.by("date").descending()));
     }
 
     @GetMapping("/search")
