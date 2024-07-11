@@ -1,9 +1,11 @@
 package com.botox.service;
 
 import com.botox.controller.RoomApiController;
+import com.botox.domain.Post;
 import com.botox.domain.Room;
 import com.botox.domain.User;
 import com.botox.exception.NotFoundRoomException;
+import com.botox.repository.PostRepository;
 import com.botox.repository.RoomRepository;
 import com.botox.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -82,7 +84,7 @@ public class RoomService {
     public void leaveRoom(Long roomNum, Long userId) {
         Room room = roomRepository.findById(roomNum)
                 .orElseThrow(() -> new NotFoundRoomException("해당 방을 찾을 수 없습니다: " + roomNum));
-        if (room.getRoomMaster().getUserId().equals(userId)) {
+        if (room.getRoomMaster().getUsername().equals(userId)) {
             roomRepository.delete(room);
         } else {
             int userCount = room.getRoomUserCount() != null ? room.getRoomUserCount() : 0;

@@ -22,7 +22,7 @@ public class Chat {
     private Room room;
 
     @ManyToOne
-    @JoinColumn(name = "sender_id", referencedColumnName = "user_id")
+    @JoinColumn(name = "sender_id", referencedColumnName = "id")
     private User sender;
 
     @Column(columnDefinition = "TEXT")

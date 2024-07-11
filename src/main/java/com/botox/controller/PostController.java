@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/posts")
 public class PostController {
@@ -45,15 +47,16 @@ public class PostController {
 
     @GetMapping
     public Page<Post> getAllPosts(
-            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size) {
         if(size > 50) size = 50;
         return postService.getAllPosts(PageRequest.of(page, size, Sort.by("date").descending()));
     }
 
     @GetMapping("/search")
-    public Page<Post> searchPosts(@RequestParam String title, Pageable pageable) {
-        return postService.searchPosts(title, pageable);
+    public ResponseEntity<List<Post>> searchPosts(@RequestParam String title) {
+        List<Post> searchResults = postService.searchPostsByTitle(title);
+        return ResponseEntity.ok().body(searchResults);
     }
 
     @GetMapping("/mypage")

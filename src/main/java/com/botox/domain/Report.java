@@ -23,7 +23,7 @@ public class Report {
     private LocalDateTime reportTime;
 
     @ManyToOne
-    @JoinColumn(name = "reporting_user_id", referencedColumnName = "user_id")
+    @JoinColumn(name = "reporting_user_id", referencedColumnName = "id")
     private User reportingUser;
 
     @ManyToOne

@@ -35,7 +35,7 @@ public class Room {
     private String gameName;
 
     @ManyToOne
-    @JoinColumn(name = "room_master", referencedColumnName = "user_id")
+    @JoinColumn(name = "room_master", referencedColumnName = "id")
     private User roomMaster;
 
     @Column(name = "room_status")
@@ -62,6 +62,6 @@ public class Room {
 
     // Custom method to get room master's ID
     public String getRoomMasterId() {
-        return this.roomMaster != null ? this.roomMaster.getUserId() : null;
+        return this.roomMaster != null ? this.roomMaster.getUsername() : null;
     }
 }
