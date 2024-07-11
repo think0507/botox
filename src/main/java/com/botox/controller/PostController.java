@@ -12,6 +12,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/posts")
 public class PostController {
@@ -44,35 +47,50 @@ public class PostController {
     }
 
     @GetMapping
-    public Page<Post> getAllPosts(
+    public ResponseEntity<?> getAllPosts(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         if(size > 50) size = 50;
-        return postService.getAllPosts(PageRequest.of(page, size, Sort.by("date").descending()));
-    }
+        Page<Post> posts = postService.getAllPosts(PageRequest.of(page, size, Sort.by("date").descending()));
 
-    @GetMapping("/search")
-    public Page<Post> searchPosts(@RequestParam String title, Pageable pageable) {
-        return postService.searchPosts(title, pageable);
+        Map<String, Object> response = new HashMap<>();
+        response.put("posts", posts.getContent());
+        response.put("currentPage", posts.getNumber());
+        response.put("totalItems", posts.getTotalElements());
+        response.put("totalPages", posts.getTotalPages());
+
+        return ResponseEntity.ok().body(response);
     }
 
     @GetMapping("/mypage")
     public ResponseEntity<?> myPage() {
-        return ResponseEntity.ok().body(new MessageResponse("Redirecting to MyPage"));
+        Map<String, Object> response = new HashMap<>();
+        response.put("redirect", "/mypage");
+        response.put("message", "Redirecting to MyPage");
+        return ResponseEntity.ok().body(response);
     }
 
     @GetMapping("/home")
     public ResponseEntity<?> home() {
-        return ResponseEntity.ok().body(new MessageResponse("Redirecting to Home"));
+        Map<String, Object> response = new HashMap<>();
+        response.put("redirect", "/home");
+        response.put("message", "Redirecting to Home");
+        return ResponseEntity.ok().body(response);
     }
 
     @GetMapping("/board")
     public ResponseEntity<?> board() {
-        return ResponseEntity.ok().body(new MessageResponse("Redirecting to Board"));
+        Map<String, Object> response = new HashMap<>();
+        response.put("redirect", "/board");
+        response.put("message", "Redirecting to Board");
+        return ResponseEntity.ok().body(response);
     }
 
     @GetMapping("/friends")
     public ResponseEntity<?> friendsList() {
-        return ResponseEntity.ok().body(new MessageResponse("Redirecting to Friends List"));
+        Map<String, Object> response = new HashMap<>();
+        response.put("redirect", "/friends");
+        response.put("message", "Redirecting to Friends List");
+        return ResponseEntity.ok().body(response);
     }
 }
