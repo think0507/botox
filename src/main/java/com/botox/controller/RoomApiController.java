@@ -13,6 +13,9 @@ import org.springframework.web.bind.annotation.*;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+import com.botox.domain.User;
+
 
 @RestController // 컨트롤러를 사용할 때는 항상 RestController 사용
 @RequiredArgsConstructor
@@ -45,8 +48,10 @@ public class RoomApiController {
     // 방 추가 기능
     @PostMapping("/rooms")
     public ResponseForm<RoomForm> createRoom(@RequestBody RoomForm roomForm) {
+        System.out.println("Received roomMasterId: " + roomForm.getRoomMasterId());
         Room room = roomService.saveRoom(roomForm);
         RoomForm createdRoomForm = convertRoomForm(room);
+        System.out.println("Converted roomMasterId: " + createdRoomForm.getRoomMasterId());
         return new ResponseForm<>(HttpStatus.CREATED, createdRoomForm, "방 생성을 완료했습니다.");
     }
 
@@ -102,9 +107,9 @@ public class RoomApiController {
 
     // 방 입장 기능
     @PostMapping("/rooms/{roomNum}/join")
-    public ResponseForm<Void> joinRoom(@PathVariable Long roomNum) {
+    public ResponseForm<Void> joinRoom(@PathVariable Long roomNum, @RequestBody JoinRoomForm joinRoomForm) {
         try {
-            roomService.joinRoom(roomNum);
+            roomService.joinRoom(roomNum, joinRoomForm.getUserId());
             return new ResponseForm<>(HttpStatus.NO_CONTENT, null, "방 입장을 완료했습니다.");
         } catch (NotFoundRoomException e) {
             return new ResponseForm<>(HttpStatus.NOT_FOUND, null, e.getMessage());
@@ -114,6 +119,7 @@ public class RoomApiController {
         }
     }
 
+
     private RoomForm convertRoomForm(Room room) {
         return RoomForm.builder()
                 .roomNum(room.getRoomNum())
@@ -121,13 +127,13 @@ public class RoomApiController {
                 .roomContent(room.getRoomContent())
                 .roomType(room.getRoomType())
                 .gameName(room.getGameName())
-                .roomMasterId(Long.valueOf(room.getRoomMasterId()))
+                .roomMasterId(room.getRoomMasterId() != null ? Long.valueOf(room.getRoomMasterId()) : null)
                 .roomStatus(room.getRoomStatus())
                 .roomCapacityLimit(room.getRoomCapacityLimit())
                 .roomUpdateTime(Timestamp.valueOf(room.getRoomUpdateTime()))
                 .roomCreateAt(Timestamp.valueOf(room.getRoomCreateAt()))
-                .roomUserCount(room.getRoomUserCount()) // 추가된 필드
-
+                .roomUserCount(room.getRoomUserCount())
+                .participantIds(room.getParticipants().stream().map(User::getId).collect(Collectors.toList()))
                 .build();
     }
 
@@ -146,6 +152,15 @@ public class RoomApiController {
         private Timestamp roomUpdateTime;
         private Timestamp roomCreateAt;
         private  Integer roomUserCount;
+        private List<Long> participantIds; // 참가자 ID 목록 추가
+
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class JoinRoomForm {
+        private Long userId;
     }
 
     @Data
