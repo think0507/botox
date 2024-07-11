@@ -1,11 +1,14 @@
 package com.botox.domain;
+
 import com.botox.constant.RoomStatus;
 import com.botox.constant.RoomType;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -25,7 +28,7 @@ public class Room {
     @Column(name = "room_content", columnDefinition = "TEXT")
     private String roomContent;
 
-    private Integer roomUserCount=0;
+    private Integer roomUserCount = 0;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "room_type")
@@ -35,7 +38,7 @@ public class Room {
     private String gameName;
 
     @ManyToOne
-    @JoinColumn(name = "room_master", referencedColumnName = "id")
+    @JoinColumn(name = "room_master_id")
     private User roomMaster;
 
     @Column(name = "room_status")
@@ -54,14 +57,15 @@ public class Room {
     @Column(name = "room_create_at")
     private LocalDateTime roomCreateAt;
 
-    @OneToMany(mappedBy = "room")
-    private List<RoomUser> participants;
+    @ManyToMany
+    @JoinTable(
+            name = "room_participants",
+            joinColumns = @JoinColumn(name = "room_id"),
+            inverseJoinColumns = @JoinColumn(name = "user_id")
+    )
+    private List<User> participants = new ArrayList<>();
 
-
-
-
-    // Custom method to get room master's ID
-    public String getRoomMasterId() {
-        return this.roomMaster != null ? this.roomMaster.getUsername() : null;
+    public Long getRoomMasterId() {
+        return this.roomMaster != null ? this.roomMaster.getId() : null;
     }
 }
