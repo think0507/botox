@@ -1,20 +1,17 @@
 spring:
   datasource:
-    url: jdbc:h2:tcp://localhost:9092/~/botox;AUTO_SERVER=TRUE
-    username: sa  # 기본 사용자 이름
-    password:     # 기본 비밀번호 (비워둠)
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
-      ddl-auto: create
+      ddl-auto: update
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.H2Dialect
+        dialect: org.hibernate.dialect.MySQL8Dialect
         format_sql: true
         default_batch_fetch_size: 100
-  h2:
-    console:
-      enabled: true
-      path: /h2-console
 
 logging:
   level:
