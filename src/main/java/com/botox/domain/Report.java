@@ -27,7 +27,7 @@ public class Report {
     private User reportingUser;
 
     @ManyToOne
-    @JoinColumn(name = "reported_user_id")
+    @JoinColumn(name = "reported_user_id", nullable = false)
     private User reportedUser;
 
     @Column(name = "feedback_result")
@@ -35,6 +35,10 @@ public class Report {
 
     @Column(name = "reason_for_report", columnDefinition = "TEXT")
     private String reasonForReport;
+
+    private Long reportedPostId;      // 신고받은 게시글 ID (nullable)
+    private Long reportedCommentId;   // 신고받은 댓글 ID (nullable)
+    private Long reportedChatId;      // 신고받은 채팅 ID (nullable)
 
     @Enumerated(EnumType.STRING)
     @Column(name = "report_type")

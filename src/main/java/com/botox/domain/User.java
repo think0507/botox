@@ -27,11 +27,12 @@ public class User {
     private Integer userTemperatureLevel;
 
 
-    @Column(name = "user_nickname")
+    @Column(name = "user_nickname", nullable = false, unique = true)
     private String userNickname;
 
-    @Column(name = "user_password")
+    @Column(name = "user_password", nullable = false)
     private String password;
+
 
     @Enumerated(EnumType.STRING)
     private UserStatus status; // enum: ONLINE, OFFLINE
@@ -44,7 +45,5 @@ public class User {
 
     @OneToMany(mappedBy = "reportedUser")
     private List<Report> reportsReceived;
-
-
-
 }
+
