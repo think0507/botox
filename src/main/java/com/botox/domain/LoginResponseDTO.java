@@ -10,7 +10,7 @@ import java.sql.Date;
 @Getter @Setter
 @AllArgsConstructor
 public class LoginResponseDTO {
-    private String userId;
+    private String username;
     private String password;
     private String accessToken;
     private String refreshToken;

@@ -63,7 +63,7 @@ public class UserController {
             return new ResponseForm<>(HttpStatus.BAD_REQUEST, null, "유효하지 않은 자격 증명입니다.");
         }
 
-        Optional<User> userOptional = userService.findByUserId(loginDTO.getUserId());
+        Optional<User> userOptional = userService.findByUsername(loginDTO.getUsername());
         if (userOptional.isEmpty()) {
             return new ResponseForm<>(HttpStatus.UNAUTHORIZED, null, "유효하지 않은 사용자 ID 입니다.");
         }
@@ -86,9 +86,9 @@ public class UserController {
 
     @PostMapping("/logout")
     public ResponseForm<String> logout (@RequestBody Map < String, String > request){
-        String userId = request.get("userId");
+        String username = request.get("username");
         try {
-            userService.logout(userId);
+            userService.logout(username);
             return new ResponseForm<>(HttpStatus.OK, null, "로그아웃에 성공했습니다.");
         } catch (UsernameNotFoundException e) {
             return new ResponseForm<>(HttpStatus.UNAUTHORIZED, null, "유효하지 않은 사용자 ID 입니다.");
@@ -99,10 +99,10 @@ public class UserController {
 
     @PostMapping("/refresh")
     public ResponseForm<LoginResponseDTO> refreshAccessToken (@RequestBody Map < String, String > request){
-        String userId = request.get("userId");
+        String username = request.get("username");
         String refreshToken = request.get("refreshToken");
         try {
-            LoginResponseDTO loginResponse = userService.refreshAccessToken(userId, refreshToken);
+            LoginResponseDTO loginResponse = userService.refreshAccessToken(username, refreshToken);
             if (loginResponse == null) {
                 return new ResponseForm<>(HttpStatus.UNAUTHORIZED, null, "유효하지 않은 Refresh Token 입니다.");
             }
@@ -128,41 +128,41 @@ public class UserController {
 
 
     // 유저 조회
-    @GetMapping("/{userId}")
-    public ResponseForm<UserDTO> getUserByUserId(@PathVariable String userId) {
-        UserDTO user = userService.getUserByUserId(userId).orElseThrow(() -> new RuntimeException("User not found"));
+    @GetMapping("/{username}")
+    public ResponseForm<UserDTO> getUserByUsername(@PathVariable String username) {
+        UserDTO user = userService.getUserByUsername(username).orElseThrow(() -> new RuntimeException("User not found"));
         return new ResponseForm<>(HttpStatus.OK, user, "User retrieved successfully");
     }
 
     // 유저 삭제(회원탈퇴)
-    @DeleteMapping("/{userId}")
-    public ResponseForm<Void> deleteUser(@PathVariable String userId) {
-        userService.deleteUser(userId);
+    @DeleteMapping("/{username}")
+    public ResponseForm<Void> deleteUser(@PathVariable String username) {
+        userService.deleteUser(username);
         return new ResponseForm<>(HttpStatus.NO_CONTENT, null, "User deleted successfully");
     }
 
     // userProfile 수정 또는 생성
-    @PatchMapping("/{userId}/profile")
+    @PatchMapping("/{username}/profile")
     public ResponseForm<ProfileDTO> updateUserProfile(
-            @PathVariable String userId,
+            @PathVariable String username,
             @RequestBody Map<String, String> updates) {
         String userProfile = updates.get("userProfile");
         String userProfilePic = updates.get("userProfilePic");
         String userNickname = updates.get("userNickname");
-        ProfileDTO updatedProfile = userService.updateUserProfile(userId, userProfile, userProfilePic,userNickname);
+        ProfileDTO updatedProfile = userService.updateUserProfile(username, userProfile, userProfilePic,userNickname);
         return new ResponseForm<>(HttpStatus.OK, updatedProfile, "User profile updated successfully");
     }
 
     // userProfile 삭제
-    @DeleteMapping("/{userId}/profile")
-    public ResponseForm<ProfileDTO> deleteUserProfile(@PathVariable String userId) {
-        ProfileDTO updatedProfile = userService.deleteUserProfile(userId);
+    @DeleteMapping("/{username}/profile")
+    public ResponseForm<ProfileDTO> deleteUserProfile(@PathVariable String username) {
+        ProfileDTO updatedProfile = userService.deleteUserProfile(username);
         return new ResponseForm<>(HttpStatus.OK, updatedProfile, "User profile deleted successfully");
     }
     // userProfile 조회
-    @GetMapping("/{userId}/profile")
-    public ResponseForm<ProfileDTO> getUserProfile (@PathVariable String userId) {
-        ProfileDTO userProfile = userService.getUserProfile(userId);
+    @GetMapping("/{username}/profile")
+    public ResponseForm<ProfileDTO> getUserProfile (@PathVariable String username) {
+        ProfileDTO userProfile = userService.getUserProfile(username);
         return new ResponseForm<>(HttpStatus.OK, userProfile, "User profile retrieved successfully");
     }
 }

@@ -41,7 +41,7 @@ public class ReportService {
 
         // Convert to ReportResponse
         ReportResponse response = new ReportResponse();
-        response.setId(savedReport.getId());
+        response.setId(savedReport.getReportId());
         response.setReportTime(savedReport.getReportTime());
         response.setReasonForReport(savedReport.getReasonForReport());
         response.setReportedPostId(savedReport.getReportedPostId());

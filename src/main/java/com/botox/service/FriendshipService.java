@@ -55,10 +55,8 @@ public class FriendshipService {
     }
 
     public boolean isAlreadyFriends(Long senderId, Long receiverId) {
-        List<Friendship> friendships = friendshipRepository.findByAcceptedUserIdOrRequestedUserId(senderId, receiverId);
-        return friendships.stream()
-                .anyMatch(friendship -> (friendship.getAcceptedUser().getId().equals(receiverId) && friendship.getRequestedUser().getId().equals(senderId))
-                        || (friendship.getAcceptedUser().getId().equals(senderId) && friendship.getRequestedUser().getId().equals(receiverId)));
+        List<Friendship> friendships = friendshipRepository.findFriendshipBetweenUsers(senderId, receiverId);
+        return !friendships.isEmpty();
     }
 
     public List<FriendshipRequestDTO> getPendingFriendRequests(Long userId) {
@@ -104,14 +102,8 @@ public class FriendshipService {
     }
 
     public void removeFriend(Long userId, Long friendId) {
-        List<Friendship> friendships = friendshipRepository.findByAcceptedUserIdAndRequestedUserId(userId, friendId);
-        friendships.addAll(friendshipRepository.findByAcceptedUserIdAndRequestedUserId(friendId, userId));
-
-        friendships.stream()
-                .filter(friendship -> (friendship.getAcceptedUser().getId().equals(friendId) && friendship.getRequestedUser().getId().equals(userId))
-                        || (friendship.getAcceptedUser().getId().equals(userId) && friendship.getRequestedUser().getId().equals(friendId)))
-                .findFirst()
-                .ifPresent(friendshipRepository::delete);
+        List<Friendship> friendships = friendshipRepository.findFriendshipBetweenUsers(userId, friendId);
+        friendshipRepository.deleteAll(friendships);
     }
 
     private FriendshipRequestDTO convertToDTO(FriendshipRequest friendshipRequest) {

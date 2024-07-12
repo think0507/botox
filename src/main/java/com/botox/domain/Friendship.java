@@ -7,7 +7,6 @@ import lombok.Setter;
 @Entity
 @Getter @Setter
 @Table(name = "friendship")
-@Getter @Setter
 public class Friendship {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -15,9 +14,9 @@ public class Friendship {
 
     @ManyToOne
     @JoinColumn(name = "accept_user_id", referencedColumnName = "id")
-    private User acceptUser;
+    private User acceptedUser;
 
     @ManyToOne
     @JoinColumn(name = "request_user_id", referencedColumnName = "id")
-    private User requestUser;
+    private User requestedUser;
 }

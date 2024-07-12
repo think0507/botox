@@ -36,7 +36,7 @@ public class TokenProvider {
         Date now = new Date();
         Date expiredAt = new Date(now.getTime() + expiry.toMillis());
         return Jwts.builder()
-                .setSubject(user.getUserId())
+                .setSubject(user.getUsername())
                 .setExpiration(expiredAt)
                 .signWith(getSigningKey(), SignatureAlgorithm.HS512)
                 .compact();
@@ -48,9 +48,9 @@ public class TokenProvider {
                 .setIssuer(jwtProperties.getIssuer())
                 .setIssuedAt(now)
                 .setExpiration(expiredAt)
-                .setSubject(user.getUserId())
-                .claim("userId", user.getUserId())
-                .claim("username", user.getUserNickname())
+                .setSubject(user.getUsername())
+                .claim("username", user.getUsername())
+                .claim("user_nickname", user.getUserNickname())
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
     }

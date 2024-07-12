@@ -16,7 +16,7 @@ public class SpringUser extends User {  // Wrapper 로 작용
 
     public static UserDetails getSpringUserDetails(com.botox.domain.User appUser) {
         return User.builder()
-                .username(appUser.getUserId())
+                .username(appUser.getUsername())
                 .password(appUser.getPassword())
                 .build();
     }

@@ -10,13 +10,13 @@ import java.util.Optional;
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
 
-    Optional<User> findByUserId(String userId);
+    Optional<User> findByUsername(String username);
 
-    void deleteByUserId(String userId);
+    void deleteByUsername(String username);
 
-    // (1) 중복 유저 체크를 위한 기본 쿼리 (userId, userNickName) 준비
+    // (1) 중복 유저 체크를 위한 기본 쿼리 (username, userNickName) 준비
     boolean existsByUserNickname(String userNickname);
 
     // 로그인 인증 시 유저 유무 확인 가능
-    boolean existsByUserId(String userId);
+    boolean existsByUsername(String username);
 }
