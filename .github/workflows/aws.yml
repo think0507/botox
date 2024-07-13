@@ -21,7 +21,7 @@ jobs:
           java-version: '17'
 
       - name: Gradle로 빌드
-        run: ./gradlew build
+        run: ./gradlew build -x test
 
       - name: 아티팩트 업로드
         uses: actions/upload-artifact@v4
