@@ -20,8 +20,8 @@ jobs:
           distribution: 'corretto'
           java-version: '17'
 
-      - name: Gradle로 빌드
-        run: ./gradlew build
+      - name: Gradle로 빌드 (개발 환경)
+        run: ./gradlew build -Dspring.profiles.active=dev
 
       - name: 아티팩트 업로드
         uses: actions/upload-artifact@v4
@@ -60,11 +60,11 @@ jobs:
           DB_USERNAME: ${{ secrets.DB_USERNAME }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
         run: |
-          scp -i $HOME/.ssh/id_rsa -o StrictHostKeyChecking=no $GITHUB_WORKSPACE/botox-0.0.1-SNAPSHOT.jar ec2-user@${{ secrets.EC2_BLUE_IP }}:/home/ec2-user/
+          scp -i $HOME/.ssh/id_rsa -o StrictHostKeyChecking=no $GITHUB_WORKSPACE/build/libs/*.jar ec2-user@${{ secrets.EC2_BLUE_IP }}:/home/ec2-user/
           ssh -i $HOME/.ssh/id_rsa -o StrictHostKeyChecking=no ec2-user@${{ secrets.EC2_BLUE_IP }} 'bash -s' <<'EOF'
             export DB_URL=${DB_URL}
             export DB_USERNAME=${DB_USERNAME}
             export DB_PASSWORD=${DB_PASSWORD}
-            pkill -f botox-0.0.1-SNAPSHOT.jar || true
-            nohup java -jar /home/ec2-user/botox-0.0.1-SNAPSHOT.jar > /dev/null 2>&1 &
+            pkill -f *.jar || true
+            nohup java -jar /home/ec2-user/*.jar --spring.profiles.active=prod > /dev/null 2>&1 &
           EOF
