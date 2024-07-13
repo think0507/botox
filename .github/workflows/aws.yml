@@ -1,4 +1,4 @@
-name: EC2배포!
+name: EC2 배포
 
 on:
   push:
@@ -66,7 +66,9 @@ jobs:
           DB_USERNAME: ${{ secrets.DB_USERNAME }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
         run: |
-          scp -i $HOME/.ssh/id_rsa -o StrictHostKeyChecking=no $GITHUB_WORKSPACE/botox-0.0.1-SNAPSHOT.jar ec2-user@${{ secrets.EC2_BLUE_IP }}:/home/ec2-user/
+          JAR_FILE=$(ls $GITHUB_WORKSPACE/build/libs/*.jar | head -n 1)
+          echo "배포할 JAR 파일: $JAR_FILE"
+          scp -i $HOME/.ssh/id_rsa -o StrictHostKeyChecking=no $JAR_FILE ec2-user@${{ secrets.EC2_BLUE_IP }}:/home/ec2-user/
           ssh -i $HOME/.ssh/id_rsa -o StrictHostKeyChecking=no ec2-user@${{ secrets.EC2_BLUE_IP }} 'bash -s' <<'EOF'
             export DB_URL=${DB_URL}
             export DB_USERNAME=${DB_USERNAME}
