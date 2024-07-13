@@ -59,7 +59,6 @@ jobs:
         run: |
           echo "아티팩트 다운로드 경로 확인:"
           ls -al $GITHUB_WORKSPACE
-          ls -al $GITHUB_WORKSPACE/build/libs
 
       - name: Deploy to EC2 (Blue)
         env:
@@ -67,7 +66,7 @@ jobs:
           DB_USERNAME: ${{ secrets.DB_USERNAME }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
         run: |
-          JAR_FILE=$(ls $GITHUB_WORKSPACE/build/libs/*.jar | head -n 1)
+          JAR_FILE=$(ls $GITHUB_WORKSPACE/*.jar | head -n 1)
           echo "배포할 JAR 파일: $JAR_FILE"
           if [ -z "$JAR_FILE" ]; then
             echo "배포할 JAR 파일을 찾을 수 없습니다."
