@@ -25,6 +25,7 @@ public class CommentController {
     private final CommentService commentService;
     private final CommentReportService commentReportService;
 
+    //댓글 등록 메서드
     @PostMapping("/comments")
     public ResponseForm<CommentForm> createComment(@RequestBody CommentForm commentForm){
         try {
