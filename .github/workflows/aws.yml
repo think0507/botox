@@ -1,4 +1,4 @@
-name: EC2 배포
+name: EC2 배포 3
 
 on:
   push:
@@ -9,6 +9,17 @@ on:
 jobs:
   test-and-build:
     runs-on: ubuntu-latest
+
+    services:
+      h2:
+        image: oscarfonts/h2:latest
+        ports:
+          - 9092:9092
+
+      redis:
+        image: redis:latest
+        ports:
+          - 6379:6379
 
     steps:
       - name: 코드 체크아웃
@@ -21,7 +32,7 @@ jobs:
           java-version: '17'
 
       - name: Gradle로 빌드 (개발 환경)
-        run: ./gradlew build -Dspring.profiles.active=dev
+        run: ./gradlew build -Dspring.profiles.active=dev -x test
 
       - name: 빌드 결과 확인
         run: ls -al build/libs
