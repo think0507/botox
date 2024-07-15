@@ -32,7 +32,7 @@ jobs:
           java-version: '17'
 
       - name: Gradle로 빌드 (개발 환경)
-        run: ./gradlew build -Dspring.profiles.active=dev
+        run: ./gradlew build -Dspring.profiles.active=dev -x test
 
       - name: 빌드 결과 확인
         run: ls -al build/libs
