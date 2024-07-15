@@ -1,8 +1,13 @@
 spring:
+#  datasource:
+#    url: jdbc:h2:tcp://localhost:9092/~/botox;AUTO_SERVER=TRUE
+#    username: sa  # 기본 사용자 이름
+#    password:     # 기본 비밀번호 (비워둠)
   datasource:
-    url: jdbc:h2:tcp://localhost:9092/~/botox;AUTO_SERVER=TRUE
-    username: sa  # 기본 사용자 이름
-    password:     # 기본 비밀번호 (비워둠)
+    url: jdbc:h2:mem:test
+    username: root
+    password:
+    driver-class-name: org.h2.Driver
   h2:
     console:
       enabled: true
