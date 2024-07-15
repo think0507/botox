@@ -5,18 +5,18 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Entity
-@Table(name = "friendship")
 @Getter @Setter
+@Table(name = "friendship")
 public class Friendship {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "acceptId", referencedColumnName = "user_id")
-    private User acceptUser;
+    @JoinColumn(name = "accept_user_id", referencedColumnName = "id")
+    private User acceptedUser;
 
     @ManyToOne
-    @JoinColumn(name = "requestId", referencedColumnName = "user_id")
-    private User requestUser;
+    @JoinColumn(name = "request_user_id", referencedColumnName = "id")
+    private User requestedUser;
 }

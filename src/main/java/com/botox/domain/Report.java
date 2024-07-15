@@ -3,13 +3,16 @@ package com.botox.domain;
 import com.botox.constant.ProcessingStatus;
 import com.botox.constant.ReportType;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
+
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "report")
 @Getter @Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@Table(name = "report")
 public class Report {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -20,11 +23,11 @@ public class Report {
     private LocalDateTime reportTime;
 
     @ManyToOne
-    @JoinColumn(name = "reporting_user_id", referencedColumnName = "user_id")
+    @JoinColumn(name = "reporting_user_id", referencedColumnName = "id")
     private User reportingUser;
 
     @ManyToOne
-    @JoinColumn(name = "reported_user_id", referencedColumnName = "user_id")
+    @JoinColumn(name = "reported_user_id", nullable = false)
     private User reportedUser;
 
     @Column(name = "feedback_result")
@@ -32,6 +35,10 @@ public class Report {
 
     @Column(name = "reason_for_report", columnDefinition = "TEXT")
     private String reasonForReport;
+
+    private Long reportedPostId;      // 신고받은 게시글 ID (nullable)
+    private Long reportedCommentId;   // 신고받은 댓글 ID (nullable)
+    private Long reportedChatId;      // 신고받은 채팅 ID (nullable)
 
     @Enumerated(EnumType.STRING)
     @Column(name = "report_type")

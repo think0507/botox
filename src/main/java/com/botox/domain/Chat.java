@@ -3,6 +3,9 @@ package com.botox.domain;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.NoArgsConstructor;
+
+
 import java.time.LocalDateTime;
 
 @Entity
@@ -19,11 +22,13 @@ public class Chat {
     private Room room;
 
     @ManyToOne
-    @JoinColumn(name = "sender_id", referencedColumnName = "user_id")
+    @JoinColumn(name = "sender_id", referencedColumnName = "id")
     private User sender;
 
     @Column(columnDefinition = "TEXT")
     private String content;
 
     private LocalDateTime timestamp;
+
 }
+

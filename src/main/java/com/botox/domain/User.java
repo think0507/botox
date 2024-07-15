@@ -4,6 +4,7 @@ import com.botox.constant.UserStatus;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import java.util.List;
 
 @Entity
 @Table(name = "users")
@@ -13,8 +14,8 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "user_id", unique = true)
-    private String userId;
+    @Column(name = "username", unique = true)
+    private String username;
 
     @Column(name = "user_profile")
     private String userProfile;
@@ -25,11 +26,24 @@ public class User {
     @Column(name = "user_temperature_level")
     private Integer userTemperatureLevel;
 
-    @Column(name = "user_nickname")
+
+    @Column(name = "user_nickname", nullable = false, unique = true)
     private String userNickname;
 
+    @Column(name = "user_password", nullable = false)
     private String password;
 
+
     @Enumerated(EnumType.STRING)
-    private UserStatus status;
+    private UserStatus status; // enum: ONLINE, OFFLINE
+
+    @OneToMany(mappedBy = "sender")
+    private List<Chat> sentChats;
+
+    @OneToMany(mappedBy = "reportingUser")
+    private List<Report> reportsFiled;
+
+    @OneToMany(mappedBy = "reportedUser")
+    private List<Report> reportsReceived;
 }
+

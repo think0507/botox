@@ -14,7 +14,7 @@ public class Comment {
     private Long commentId;
 
     @ManyToOne
-    @JoinColumn(name = "author_id", referencedColumnName = "user_id")
+    @JoinColumn(name = "author_id", referencedColumnName = "id")
     private User author;
 
     @Column(name = "comment_content", columnDefinition = "TEXT")

@@ -1,27 +1,19 @@
 spring:
-  datasource:
-    url: jdbc:h2:tcp://localhost/~/botox
-    username: sa
-    password:
-    driver-class-name: org.h2.Driver
-
   jpa:
     hibernate:
       ddl-auto: update
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.H2Dialect
         format_sql: true
         default_batch_fetch_size: 100
 
-    h2:
-      console:
-        enabled: true
-        path: /h2-console
+logging:
+  level:
+    org.hibernate.SQL: info
+    org.hibernate.type: trace
+    org.springframework.orm.jpa: DEBUG
+    org.springframework.transaction: DEBUG
 
-  logging:
-    level:
-      org.hibernate.SQL: info
-      org.hibernate.type: trace
-      org.springframework.orm.jpa: DEBUG
-      org.springframework.transaction: DEBUG
+jwt:
+  issuer: kim11
+  secretKey: ff54dd1f64544befbeae0e43d1b9df54ff54dd1f64544befbeae0e43d1b9df54ff54dd1f64544befbeae0e43d1b9df54
