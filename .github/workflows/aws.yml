@@ -1,4 +1,4 @@
-name: EC2 배포
+name: EC2 배포 2
 
 on:
   push:
