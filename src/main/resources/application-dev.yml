@@ -1,6 +1,7 @@
 spring:
   datasource:
-    url: jdbc:h2:tcp://localhost:9092/~/botox;AUTO_SERVER=TRUE
+#    url: jdbc:h2:tcp://localhost:9092/~/botox;AUTO_SERVER=TRUE
+    url: jdbc:h2:mem:testdb
     username: sa  # 기본 사용자 이름
     password:     # 기본 비밀번호 (비워둠)
   h2:
