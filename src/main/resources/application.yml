@@ -15,7 +15,7 @@ spring:
 
 jwt:
   issuer: kim11
-  secretKey: ${JWT_SECRET_KEY}
+  secretKey: ff54dd1f64544befbeae0e43d1b9df54ff54dd1f64544befbeae0e43d1b9df54ff54dd1f64544befbeae0e43d1b9df54
 
 ---
 #application-dev.yml
@@ -54,7 +54,7 @@ logging:
 
 jwt:
   issuer: kim11
-  secretKey: ${JWT_SECRET_KEY}
+  secretKey: ff54dd1f64544befbeae0e43d1b9df54ff54dd1f64544befbeae0e43d1b9df54ff54dd1f64544befbeae0e43d1b9df54
 
 ---
 #application-prod.yml
@@ -93,4 +93,5 @@ logging:
 
 jwt:
   issuer: kim11
-  secretKey: ${JWT_SECRET_KEY}
+  secretKey: ff54dd1f64544befbeae0e43d1b9df54ff54dd1f64544befbeae0e43d1b9df54ff54dd1f64544befbeae0e43d1b9df54
+
