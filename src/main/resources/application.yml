@@ -87,7 +87,7 @@ spring:
     activate:
       on-profile: prod
   datasource:
-    url: botox-rds.clauic2uwfg6.ap-northeast-2.rds.amazonaws.com:3306/botox
+    url: jdbc:mysql://botox-rds.clauic2uwfg6.ap-northeast-2.rds.amazonaws.com:3306/botox
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
