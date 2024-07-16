@@ -13,9 +13,9 @@ java {
 	}
 }
 
-//bootJar {
-//	mainClass.set('com.botox.BotoxApplication')
-//}
+bootJar {
+	mainClass.set('com.botox.BotoxApplication')
+}
 
 configurations {
 	compileOnly {
