@@ -12,6 +12,13 @@ java {
 		languageVersion = JavaLanguageVersion.of(17)
 	}
 }
+jar {
+	manifest {
+		attributes(
+				'Main-Class': 'com.botox.BotoxApplication'
+		)
+	}
+}
 
 configurations {
 	compileOnly {
