@@ -106,11 +106,15 @@ spring:
       password:
 
 logging:
+  file:
+    name: /path/to/your/logfile.log
   level:
     org.hibernate.SQL: info
     org.hibernate.type: trace
     org.springframework.orm.jpa: DEBUG
     org.springframework.transaction: DEBUG
+    root: INFO
+    org.springframework: DEBUG
 
 jwt:
   issuer: kim11
