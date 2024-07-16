@@ -14,9 +14,8 @@ java {
 }
 
 bootJar {
-	mainClassName = 'com.botox.BotoxApplication'
+	mainClass.set('com.botox.BotoxApplication')
 }
-
 
 configurations {
 	compileOnly {
