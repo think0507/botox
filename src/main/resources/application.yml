@@ -13,6 +13,10 @@ spring:
         format_sql: true
         default_batch_fetch_size: 100
 
+jwt:
+  issuer: kim11
+  secretKey: ${JWT_SECRET_KEY}
+
 ---
 #application-dev.yml
 spring:
@@ -23,7 +27,6 @@ spring:
     url: jdbc:h2:mem:testdb
     username: sa  # 기본 사용자 이름
     password:     # 기본 비밀번호 (비워둠)
-    #    url: jdbc:h2:tcp://localhost:9092/~/botox;AUTO_SERVER=TRUE
   h2:
     console:
       enabled: true
@@ -51,11 +54,7 @@ logging:
 
 jwt:
   issuer: kim11
-  secretKey: ff54dd1f64544befbeae0e43d1b9df54ff54dd1f64544befbeae0e43d1b9df54ff54dd1f64544befbeae0e43d1b9df54
-
-
-
-
+  secretKey: ${JWT_SECRET_KEY}
 
 ---
 #application-prod.yml
@@ -64,9 +63,9 @@ spring:
     activate:
       on-profile: prod
   datasource:
-    url: jdbc:mysql://botox-rds.clauic2uwfg6.ap-northeast-2.rds.amazonaws.com:3306/botox
-    username: admin
-    password: 12345678
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
@@ -84,8 +83,6 @@ spring:
       password:
 
 logging:
-  file:
-    name: /path/to/your/logfile.log
   level:
     org.hibernate.SQL: info
     org.hibernate.type: trace
@@ -96,4 +93,4 @@ logging:
 
 jwt:
   issuer: kim11
-  secretKey: ff54dd1f64544befbeae0e43d1b9df54ff54dd1f64544befbeae0e43d1b9df54ff54dd1f64544befbeae0e43d1b9df54
+  secretKey: ${JWT_SECRET_KEY}
