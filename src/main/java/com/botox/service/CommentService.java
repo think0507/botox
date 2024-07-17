@@ -50,6 +50,7 @@ public class CommentService {
         return commentRepository.findByPost_PostId(postId);
     }
 
+   //댓글 삭제
     @Transactional
     public void deleteComment(Long commentId) {
         Comment comment = commentRepository.findById(commentId)
