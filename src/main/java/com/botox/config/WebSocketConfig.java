@@ -31,6 +31,6 @@ public class WebSocketConfig implements WebSocketConfigurer {
 
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-        registry.addHandler(webSocketHandler(), "/ws").setAllowedOrigins("https://suportscore.site");
+        registry.addHandler(webSocketHandler(), "/ws").setAllowedOriginPatterns("http://localhost:3000"); // 명시적으로 원본 설정
     }
 }

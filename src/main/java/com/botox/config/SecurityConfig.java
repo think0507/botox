@@ -36,7 +36,8 @@ public class SecurityConfig {
                                 "/api/users/signup",
                                 "/api/users/login",
                                 "/api/users/refresh",
-                                "/api/users/logout").permitAll()
+                                "/api/users/logout",
+                                "**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .csrf(AbstractHttpConfigurer::disable)
