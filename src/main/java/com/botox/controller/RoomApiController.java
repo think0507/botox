@@ -97,8 +97,10 @@ public class RoomApiController {
 
     // 방 삭제 기능
     @DeleteMapping("/rooms/{roomNum}")
+    //deleteRoom 이라는 메서드로 roomNum 매개변수를 받아 ResponseForm으로 반환.
     public ResponseForm<Void> deleteRoom(@PathVariable Long roomNum) {
         try {
+            //roomService의 deleteRoom 메서드를 사용(매개변수는 roomNum)
             roomService.deleteRoom(roomNum);
             return new ResponseForm<>(HttpStatus.NO_CONTENT, null, "방 삭제를 완료했습니다.");
         } catch (NotFoundRoomException e) {
