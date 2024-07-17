@@ -38,6 +38,7 @@ public class CommentController {
         }
     }
 
+    //작품 내 댓글 조회 기능
     @GetMapping("/posts/{postId}/comments")
     public ResponseForm<List<CommentForm>> getCommentsByPostId(@PathVariable Long postId) {
         try {
@@ -58,6 +59,7 @@ public class CommentController {
         }
     }
 
+    //댓글 삭제 기능
     @DeleteMapping("/comments/{commentId}")
     public ResponseForm<Void> deleteComment(@PathVariable Long commentId) {
         try {
@@ -71,12 +73,28 @@ public class CommentController {
         }
     }
 
+    //댓글 신고 기능 구현
     @PostMapping("/comments/{commentId}/report")
     public ResponseForm<ReportForm> reportComment(@PathVariable Long commentId, @RequestBody ReportForm reportForm) {
         try {
             reportForm.setReportedContentId(commentId);
             ReportForm reportedForm = commentReportService.reportComment(reportForm);
             return new ResponseForm<>(HttpStatus.OK, reportedForm, "댓글 신고가 성공적으로 접수되었습니다.");
+        } catch (Exception e) {
+            log.error("Unexpected error", e);
+            return new ResponseForm<>(HttpStatus.INTERNAL_SERVER_ERROR, null, "Unexpected error occurred.");
+        }
+    }
+
+    //댓글 좋아요 기능 구현
+    @PostMapping("/comments/{commentId}/like")
+    public ResponseForm<CommentForm> likeComment(@PathVariable Long commentId) {
+        try {
+            Comment comment = commentService.likeComment(commentId);
+            CommentForm likedCommentForm = convertToCommentForm(comment);
+            return new ResponseForm<>(HttpStatus.OK, likedCommentForm, "댓글 좋아요를 성공적으로 완료했습니다.");
+        } catch (NotFoundCommentException e) {
+            return new ResponseForm<>(HttpStatus.NOT_FOUND, null, e.getMessage());
         } catch (Exception e) {
             log.error("Unexpected error", e);
             return new ResponseForm<>(HttpStatus.INTERNAL_SERVER_ERROR, null, "Unexpected error occurred.");
