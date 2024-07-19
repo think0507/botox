@@ -41,6 +41,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: spring-app
+          path: spring-app/
 
       - name: SSH 키 설정
         run: |
@@ -52,7 +53,7 @@ jobs:
       - name: 디버깅 로그
         run: |
           echo "아티팩트 다운로드 경로 확인:"
-          ls -al $GITHUB_WORKSPACE
+          ls -al $GITHUB_WORKSPACE/spring-app
 
       - name: Deploy to EC2 (Blue)
         env:
