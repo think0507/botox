@@ -70,18 +70,34 @@ public class UserService implements UserDetailsService {
         try {
             userDetails = loadUserByUsername(user.getUsername());
         } catch (Exception e) {
+            System.err.println("Error loading user by username: " + e.getMessage());
+            e.printStackTrace();
             return null;
         }
 
         if (passwordEncoder.matches(rawPassword, userDetails.getPassword())) {
-            String accessToken = tokenProvider.generateAccessToken(user, Duration.ofMinutes(10));
-            String refreshToken = tokenProvider.generateRefreshToken(user, Duration.ofDays(7));
-            updateUserStatus(user.getUsername(), UserStatus.ONLINE);
+            try {
+                String accessToken = tokenProvider.generateAccessToken(user, Duration.ofMinutes(10));
+                String refreshToken = tokenProvider.generateRefreshToken(user, Duration.ofDays(7));
+                updateUserStatus(user.getUsername(), UserStatus.ONLINE);
 
-            redisTemplate.opsForValue().set("TOKEN:" + user.getUsername(), accessToken, Duration.ofMinutes(10));
-            redisTemplate.opsForValue().set("REFRESH_TOKEN:" + user.getUsername(), refreshToken, Duration.ofDays(7));
+                try {
+                    redisTemplate.opsForValue().set("TOKEN:" + user.getUsername(), accessToken, Duration.ofMinutes(10));
+                    redisTemplate.opsForValue().set("REFRESH_TOKEN:" + user.getUsername(), refreshToken, Duration.ofDays(7));
+                } catch (Exception e) {
+                    System.err.println("Error storing tokens in Redis: " + e.getMessage());
+                    e.printStackTrace();
+                    return null;
+                }
 
-            return new LoginResponseDTO(user.getUsername(), user.getPassword(), accessToken, refreshToken, UserStatus.ONLINE);
+                return new LoginResponseDTO(user.getUsername(), user.getPassword(), accessToken, refreshToken, UserStatus.ONLINE);
+            } catch (Exception e) {
+                System.err.println("Error generating tokens: " + e.getMessage());
+                e.printStackTrace();
+                return null;
+            }
+        } else {
+            System.err.println("Password mismatch for user: " + user.getUsername());
         }
         return null;
     }
@@ -107,8 +123,7 @@ public class UserService implements UserDetailsService {
                 User user = userOptional.get();
                 String newAccessToken = tokenProvider.generateAccessToken(user, Duration.ofMinutes(10));
 
-                redisTemplate.opsForValue().set("TOKEN:" + username, newAccessToken, Duration.ofMinutes(10
-                    ));
+                redisTemplate.opsForValue().set("TOKEN:" + username, newAccessToken, Duration.ofMinutes(10));
                 redisTemplate.opsForValue().set("REFRESH_TOKEN:" + username, refreshToken, Duration.ofDays(7));
 
                 return new LoginResponseDTO(user.getUsername(), user.getPassword(), newAccessToken, refreshToken, user.getStatus());
@@ -130,7 +145,6 @@ public class UserService implements UserDetailsService {
         }
     }
 
-
     public Optional<UserDTO> getUserByUsername(String username) {
         return userRepository.findByUsername(username).map(this::convertToDTO);
     }
@@ -140,6 +154,7 @@ public class UserService implements UserDetailsService {
     public void deleteUser(String username) {
         userRepository.deleteByUsername(username);
     }
+
     // userProfile 조회
     public ProfileDTO getUserProfile(String username) {
         User user = userRepository.findByUsername(username).orElseThrow(() -> new RuntimeException("User not found"));
@@ -175,7 +190,6 @@ public class UserService implements UserDetailsService {
         return profileDTO;
     }
 
-
     private UserDTO convertToDTO(User user) {
         UserDTO userDTO = new UserDTO();
         userDTO.setId(user.getId());
@@ -187,5 +201,4 @@ public class UserService implements UserDetailsService {
         userDTO.setStatus(user.getStatus());
         return userDTO;
     }
-
 }
