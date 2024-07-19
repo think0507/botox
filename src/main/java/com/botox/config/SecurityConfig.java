@@ -36,7 +36,8 @@ public class SecurityConfig {
                                 "/api/users/login",
                                 "/api/users/refresh",
                                 "/api/users/logout",
-                                "/**").permitAll()
+                                "/**",
+                                "/ws/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .csrf(csrf -> csrf.disable())

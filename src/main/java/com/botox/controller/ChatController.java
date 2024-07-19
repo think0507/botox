@@ -1,6 +1,5 @@
 package com.botox.controller;
 
-
 import com.botox.domain.ChatMessage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -34,5 +33,4 @@ public class ChatController {
         template.convertAndSend("/sub/chatroom/1", chat);
         return ResponseEntity.ok().build();
     }
-
 }
