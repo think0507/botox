@@ -60,7 +60,7 @@ jobs:
           DB_USERNAME: ${{ secrets.DB_USERNAME }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
         run: |
-          scp -i $HOME/.ssh/id_rsa -o StrictHostKeyChecking=no $GITHUB_WORKSPACE/build/libs/botox-0.0.1-SNAPSHOT.jar ec2-user@${{ secrets.EC2_BLUE_IP }}:/home/ec2-user/
+          scp -i $HOME/.ssh/id_rsa -o StrictHostKeyChecking=no $GITHUB_WORKSPACE/spring-app/botox-0.0.1-SNAPSHOT.jar ec2-user@${{ secrets.EC2_BLUE_IP }}:/home/ec2-user/
           ssh -i $HOME/.ssh/id_rsa -o StrictHostKeyChecking=no ec2-user@${{ secrets.EC2_BLUE_IP }} <<'EOF'
             export DB_URL="${DB_URL}"
             export DB_USERNAME="${DB_USERNAME}"
