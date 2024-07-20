@@ -1,22 +1,22 @@
-package com.botox.domain;
-
-import com.botox.constant.ProcessingStatus;
-import com.botox.constant.ReportType;
-import lombok.Data;
-
-import java.time.LocalDateTime;
-
-@Data
-public class ReportResponse {
-    private Long id;
-    private LocalDateTime reportTime;
-    private ReportDTO reportingUser;
-    private ReportDTO reportedUser;
-    private String feedbackResult;
-    private String reasonForReport;
-    private Long reportedPostId;
-    private Long reportedCommentId;
-    private Long reportedChatId;
-    private ReportType reportType;
-    private ProcessingStatus processingStatus;
-}
+//package com.botox.domain;
+//
+//import lombok.Data;
+//
+//@Data
+//public class ReportResponse {
+//    private String status;
+//    private ReportData data;
+//    private String message;
+//
+//    @Data
+//    public static class ReportData {
+//        private Long reportingUserId;
+//        private String reportingUserNickname;
+//        private Long reportedUserId;
+//        private String reportedUserNickname;
+//        private Long reportedPostId;
+//        private String feedbackResult;
+//        private String reasonForReport;
+//        private String reportType;
+//    }
+//}

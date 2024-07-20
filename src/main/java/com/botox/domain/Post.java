@@ -16,8 +16,9 @@ public class Post {
     @Column(name = "post_id")
     private Long postId;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id", referencedColumnName = "id")
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
     private String title;
@@ -49,4 +50,6 @@ public class Post {
     public Long getId() {
         return this.postId;
     }
+
+
 }
