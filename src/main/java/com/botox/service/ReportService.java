@@ -2,9 +2,11 @@ package com.botox.service;
 
 import com.botox.constant.ProcessingStatus;
 import com.botox.constant.ReportType;
+import com.botox.controller.PostController;
 import com.botox.domain.*;
 import com.botox.repository.ReportRepository;
 import com.botox.repository.UserRepository;
+import com.botox.repository.PostRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -18,9 +20,9 @@ import java.util.List;
 public class ReportService {
     private final ReportRepository reportRepository;
     private final UserRepository userRepository;
+    private final PostRepository postRepository;
 
-    // 신고하기 (게시글, 댓글, 사용자)
-    public ReportResponse reportUser(ReportRequest reportRequest) {
+    public PostController.ReportResponse reportUser(PostController.ReportRequest reportRequest) {
         User reportingUser = userRepository.findById(reportRequest.getReportingUserId())
                 .orElseThrow(() -> new RuntimeException("Reporting user not found"));
         User reportedUser = userRepository.findById(reportRequest.getReportedUserId())
@@ -31,46 +33,64 @@ public class ReportService {
         report.setReportingUser(reportingUser);
         report.setReportedUser(reportedUser);
         report.setReasonForReport(reportRequest.getReasonForReport());
-        report.setReportedPostId(reportRequest.getReportedPostId());
-        report.setReportedCommentId(reportRequest.getReportedCommentId());
-        report.setReportedChatId(reportRequest.getReportedChatId());
-        report.setReportType(ReportType.WARNING);
+        report.setReportType(ReportType.valueOf(reportRequest.getReportType()));
         report.setProcessingStatus(ProcessingStatus.PENDING);
+        report.setFeedbackResult(reportRequest.getFeedbackResult());
 
         Report savedReport = reportRepository.save(report);
 
-        // Convert to ReportResponse
-        ReportResponse response = new ReportResponse();
-        response.setId(savedReport.getReportId());
-        response.setReportTime(savedReport.getReportTime());
-        response.setReasonForReport(savedReport.getReasonForReport());
-        response.setReportedPostId(savedReport.getReportedPostId());
-        response.setReportedCommentId(savedReport.getReportedCommentId());
-        response.setReportedChatId(savedReport.getReportedChatId());
-        response.setReportType(savedReport.getReportType());
-        response.setProcessingStatus(savedReport.getProcessingStatus());
-
-        ReportDTO reportingUserDTO = new ReportDTO();
-        reportingUserDTO.setId(reportingUser.getId());
-        response.setReportingUser(reportingUserDTO);
-
-        ReportDTO reportedUserDTO = new ReportDTO();
-        reportedUserDTO.setId(reportedUser.getId());
-        response.setReportedUser(reportedUserDTO);
-
-        return response;
+        return createReportResponse(savedReport);
     }
 
-    //전체 신고 조회 (관리자용)
+    public PostController.ReportResponse reportPost(PostController.ReportRequest reportRequest) {
+        User reportingUser = userRepository.findById(reportRequest.getReportingUserId())
+                .orElseThrow(() -> new RuntimeException("Reporting user not found"));
+        Post reportedPost = postRepository.findById(reportRequest.getReportedPostId())
+                .orElseThrow(() -> new RuntimeException("Reported post not found"));
+        User reportedUser = reportedPost.getUser();
+
+        Report report = new Report();
+        report.setReportTime(LocalDateTime.now());
+        report.setReportingUser(reportingUser);
+        report.setReportedUser(reportedUser);
+        report.setReportedPostId(reportRequest.getReportedPostId());
+        report.setReasonForReport(reportRequest.getReasonForReport());
+        report.setReportType(ReportType.valueOf(reportRequest.getReportType()));
+        report.setProcessingStatus(ProcessingStatus.PENDING);
+        report.setFeedbackResult(reportRequest.getFeedbackResult());
+
+        Report savedReport = reportRepository.save(report);
+
+        return createReportResponse(savedReport);
+    }
+
     public List<Report> getAllReports() {
         return reportRepository.findAll();
     }
 
-    // 신고 조회 (관리자용)
     public Report getReport(Long reportId) {
         return reportRepository.findById(reportId)
                 .orElseThrow(() -> new RuntimeException("Report not found"));
     }
 
+    private PostController.ReportResponse createReportResponse(Report report) {
+        PostController.ReportResponse response = new PostController.ReportResponse();
+        response.setStatus("OK");
+
+        PostController.ReportResponse.ReportData data = new PostController.ReportResponse.ReportData();
+        data.setReportingUserId(report.getReportingUser().getId());
+        data.setReportingUserNickname(report.getReportingUser().getUserNickname());
+        data.setReportedUserId(report.getReportedUser().getId());
+        data.setReportedUserNickname(report.getReportedUser().getUserNickname());
+        data.setReportedPostId(report.getReportedPostId());
+        data.setFeedbackResult(report.getFeedbackResult());
+        data.setReasonForReport(report.getReasonForReport());
+        data.setReportType(report.getReportType().name());
+
+        response.setData(data);
+        response.setMessage("게시글 신고가 성공적으로 접수되었습니다.");
+
+        return response;
+    }
 
 }
