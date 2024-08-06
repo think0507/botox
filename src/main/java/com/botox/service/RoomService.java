@@ -6,6 +6,7 @@ import com.botox.domain.User;
 import com.botox.exception.NotFoundRoomException;
 import com.botox.repository.RoomRepository;
 import com.botox.repository.UserRepository;
+import com.botox.repository.query.RoomRepositoryQuery;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -18,6 +19,7 @@ public class RoomService {
     private final RoomRepository roomRepository;
     private final UserRepository userRepository;
 
+    //방 조회 기능
     public List<Room> getAllRoomByContent(String roomContent) {
         //roomRepository에서 입력받은 roomContent와 일치하는 데이터들을 List<Room> 타입의 변수 rooms에 저장.
         List<Room> rooms = roomRepository.findByRoomContent(roomContent);
@@ -140,5 +142,14 @@ public class RoomService {
         room.getParticipants().add(user);
         // room 객체를 저장합니다.
         roomRepository.save(room);
+    }
+
+    //참여자 수 총합 기능
+    public Long getTotalUserCountByRoomContent(String roomContent) {
+        Long totalUserCount = roomRepository.getTotalUserCountByRoomContent(roomContent);
+        if (totalUserCount == null) {
+            throw new NotFoundRoomException("해당 내용에 대한 방을 찾을 수 없습니다: " + roomContent);
+        }
+        return totalUserCount;
     }
 }
