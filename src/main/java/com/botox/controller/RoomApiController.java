@@ -97,8 +97,10 @@ public class RoomApiController {
 
     // 방 삭제 기능
     @DeleteMapping("/rooms/{roomNum}")
+    //deleteRoom 이라는 메서드로 roomNum 매개변수를 받아 ResponseForm으로 반환.
     public ResponseForm<Void> deleteRoom(@PathVariable Long roomNum) {
         try {
+            //roomService의 deleteRoom 메서드를 사용(매개변수는 roomNum)
             roomService.deleteRoom(roomNum);
             return new ResponseForm<>(HttpStatus.NO_CONTENT, null, "방 삭제를 완료했습니다.");
         } catch (NotFoundRoomException e) {
@@ -131,6 +133,20 @@ public class RoomApiController {
             return new ResponseForm<>(HttpStatus.NO_CONTENT, null, "방 입장을 완료했습니다.");
         } catch (NotFoundRoomException e) {
             return new ResponseForm<>(HttpStatus.NOT_FOUND, null, e.getMessage());
+        } catch (Exception e) {
+            log.error("Unexpected error", e);
+            return new ResponseForm<>(HttpStatus.INTERNAL_SERVER_ERROR, null, "예기치 않은 오류가 발생했습니다.");
+        }
+    }
+
+    //게임별로 유저 수 측정하는 API
+    @GetMapping("/rooms/{roomContent}/count")
+    public ResponseForm<Long> getTotalUserCountByRoomContent(@PathVariable String roomContent) {
+        try {
+            Long totalUserCount = roomService.getTotalUserCountByRoomContent(roomContent);
+            return new ResponseForm<>(HttpStatus.OK, totalUserCount, "OK");
+        } catch (NotFoundRoomException e) {
+            return new ResponseForm<>(HttpStatus.NO_CONTENT, null, e.getMessage());
         } catch (Exception e) {
             log.error("Unexpected error", e);
             return new ResponseForm<>(HttpStatus.INTERNAL_SERVER_ERROR, null, "예기치 않은 오류가 발생했습니다.");
