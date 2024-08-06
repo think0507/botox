@@ -1,5 +1,6 @@
 package com.botox.domain;
 
+import com.botox.constant.UserRole;
 import com.botox.constant.UserStatus;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -45,5 +46,9 @@ public class User {
 
     @OneToMany(mappedBy = "reportedUser")
     private List<Report> reportsReceived;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "role")
+    private UserRole role = UserRole.USER;
 }
 
