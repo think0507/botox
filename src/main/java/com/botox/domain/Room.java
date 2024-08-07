@@ -49,6 +49,8 @@ public class Room {
     private String roomPassword;
 
     @Column(name = "room_capacity_limit")
+
+
     private Integer roomCapacityLimit;
 
     @Column(name = "room_update_time")
