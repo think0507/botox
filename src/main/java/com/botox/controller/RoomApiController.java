@@ -129,10 +129,13 @@ public class RoomApiController {
     @PostMapping("/rooms/{roomNum}/join")
     public ResponseForm<Void> joinRoom(@PathVariable Long roomNum, @RequestBody JoinRoomForm joinRoomForm) {
         try {
-            roomService.joinRoom(roomNum, joinRoomForm.getUserId());
+            // 비밀번호를 포함하여 서비스 메서드 호출
+            roomService.joinRoom(roomNum, joinRoomForm.getUserId(), joinRoomForm.getPassword());
             return new ResponseForm<>(HttpStatus.NO_CONTENT, null, "방 입장을 완료했습니다.");
         } catch (NotFoundRoomException e) {
             return new ResponseForm<>(HttpStatus.NOT_FOUND, null, e.getMessage());
+        } catch (IllegalArgumentException e) {
+            return new ResponseForm<>(HttpStatus.UNAUTHORIZED, null, "잘못된 비밀번호입니다.");
         } catch (Exception e) {
             log.error("Unexpected error", e);
             return new ResponseForm<>(HttpStatus.INTERNAL_SERVER_ERROR, null, "예기치 않은 오류가 발생했습니다.");
@@ -161,6 +164,7 @@ public class RoomApiController {
                 .roomContent(room.getRoomContent())
                 .roomType(room.getRoomType())
                 .gameName(room.getGameName())
+                .roomPassword(room.getRoomPassword()) // 여기를 수정
                 .roomMasterId(room.getRoomMasterId() != null ? Long.valueOf(room.getRoomMasterId()) : null)
                 .roomStatus(room.getRoomStatus())
                 .roomCapacityLimit(room.getRoomCapacityLimit())
@@ -178,6 +182,7 @@ public class RoomApiController {
         private Long roomNum;
         private String roomTitle;
         private String roomContent;
+        private String roomPassword;
         private RoomType roomType;
         private String gameName;
         private Long roomMasterId;
@@ -195,6 +200,7 @@ public class RoomApiController {
     @AllArgsConstructor
     public static class JoinRoomForm {
         private Long userId;
+        private String password;
     }
 
     @Data

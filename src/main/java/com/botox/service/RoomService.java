@@ -9,6 +9,7 @@ import com.botox.repository.UserRepository;
 import com.botox.repository.query.RoomRepositoryQuery;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -46,6 +47,7 @@ public class RoomService {
 
         room.setRoomMaster(roomMaster);
         room.setRoomStatus(roomForm.getRoomStatus());
+        room.setRoomPassword(roomForm.getRoomPassword());
         room.setRoomCapacityLimit(roomForm.getRoomCapacityLimit());
         room.setRoomUpdateTime(roomForm.getRoomUpdateTime().toLocalDateTime());
         room.setRoomCreateAt(LocalDateTime.now());
@@ -125,7 +127,8 @@ public class RoomService {
     }
 
     // 방 입장 기능
-    public void joinRoom(Long roomNum, Long userId) {
+    @Transactional
+    public void joinRoom(Long roomNum, Long userId, String password) {
         // roomNum을 이용해 Room 객체를 찾습니다. 해당 Room이 없으면 NotFoundRoomException 예외를 발생시킵니다.
         Room room = roomRepository.findById(roomNum)
                 .orElseThrow(() -> new NotFoundRoomException("해당 방을 찾을 수 없습니다: " + roomNum));
@@ -133,6 +136,11 @@ public class RoomService {
         // userId를 이용해 User 객체를 찾습니다. 해당 User가 없으면 NotFoundRoomException 예외를 발생시킵니다.
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundRoomException("해당 사용자를 찾을 수 없습니다: " + userId));
+
+        // 비밀번호 검증
+        if (room.getRoomPassword() != null && !room.getRoomPassword().isEmpty() && !room.getRoomPassword().equals(password)) {
+            throw new IllegalArgumentException("잘못된 비밀번호입니다.");
+        }
 
         // 방에 있는 사용자의 수를 증가시킵니다.
         int userCount = room.getRoomUserCount() != null ? room.getRoomUserCount() : 0;
@@ -142,6 +150,12 @@ public class RoomService {
         room.getParticipants().add(user);
         // room 객체를 저장합니다.
         roomRepository.save(room);
+    }
+
+    // 기존 방 입장 기능 (비밀번호 없이)
+    @Transactional
+    public void joinRoom(Long roomNum, Long userId) {
+        joinRoom(roomNum, userId, null);
     }
 
     //참여자 수 총합 기능
