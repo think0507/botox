@@ -50,4 +50,6 @@ public class Report {
 
     @Column(name = "reported_content_id")
     private Long reportedContentId;
+
+
 }

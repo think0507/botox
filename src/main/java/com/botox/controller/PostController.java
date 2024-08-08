@@ -2,19 +2,26 @@ package com.botox.controller;
 
 import com.botox.constant.MessageResponse;
 import com.botox.constant.PostResponse;
+import com.botox.constant.ReportType;
 import com.botox.domain.Post;
 import com.botox.service.PostService;
+import com.botox.service.ReportService;
+import lombok.Data;
+import lombok.Builder;
+import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/posts")
@@ -22,76 +29,185 @@ public class PostController {
 
     @Autowired
     private PostService postService;
+    @Autowired
+    private ReportService reportService;
 
     @PostMapping
-    public ResponseEntity<?> createPost(@RequestBody Post post) {
-        Post newPost = postService.createPost(post);
-        return ResponseEntity.ok().body(new PostResponse(newPost.getId(), "Post created successfully"));
+    public ResponseForm<PostForm> createPost(@RequestBody Post post, @RequestParam Long userId) {
+        try {
+            Post createdPost = postService.createPost(post, userId);
+            PostForm postForm = convertToPostForm(createdPost);
+            return new ResponseForm<>(HttpStatus.OK, postForm, "게시글 생성을 성공적으로 완료했습니다!");
+        } catch (Exception e) {
+            return new ResponseForm<>(HttpStatus.INTERNAL_SERVER_ERROR, null, "Error creating post: " + e.getMessage());
+        }
     }
 
     @GetMapping("/{postId}")
-    public ResponseEntity<Post> getPost(@PathVariable Long postId) {
-        Post post = postService.getPost(postId);
-        return ResponseEntity.ok().body(post);
+    public ResponseForm<PostForm> getPost(@PathVariable Long postId) {
+        try {
+            Post post = postService.getPost(postId);
+            PostForm postForm = convertToPostForm(post);
+            return new ResponseForm<>(HttpStatus.OK, postForm, "OK");
+        } catch (Exception e) {
+            return new ResponseForm<>(HttpStatus.NOT_FOUND, null, "Post not found");
+        }
     }
 
     @PutMapping("/{postId}")
-    public ResponseEntity<?> updatePost(@PathVariable Long postId, @RequestBody Post postDetails) {
-        postService.updatePost(postId, postDetails);
-        return ResponseEntity.ok().body(new MessageResponse("Post updated successfully"));
+    public ResponseForm<PostForm> updatePost(@PathVariable Long postId, @RequestBody Post postDetails) {
+        try {
+            Post updatedPost = postService.updatePost(postId, postDetails);
+            PostForm postForm = convertToPostForm(updatedPost);
+            return new ResponseForm<>(HttpStatus.OK, postForm, "게시글이 성공적으로 수정되었습니다.");
+        } catch (Exception e) {
+            return new ResponseForm<>(HttpStatus.INTERNAL_SERVER_ERROR, null, "Error updating post: " + e.getMessage());
+        }
     }
 
     @DeleteMapping("/{postId}")
-    public ResponseEntity<?> deletePost(@PathVariable Long postId) {
-        postService.deletePost(postId);
-        return ResponseEntity.ok().body(new MessageResponse("Post deleted successfully"));
+    public ResponseForm<Void> deletePost(@PathVariable Long postId) {
+        try {
+            postService.deletePost(postId);
+            return new ResponseForm<>(HttpStatus.NO_CONTENT, null, "게시글이 삭제되었습니다.");
+        } catch (Exception e) {
+            return new ResponseForm<>(HttpStatus.INTERNAL_SERVER_ERROR, null, "Error deleting post: " + e.getMessage());
+        }
     }
 
     @GetMapping
-    public ResponseEntity<?> getAllPosts(
-            @RequestParam(defaultValue = "0") int page,
+    public ResponseForm<PagedPostResponse> getAllPosts(
+            @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size) {
         if(size > 50) size = 50;
-        Page<Post> posts = postService.getAllPosts(PageRequest.of(page, size, Sort.by("date").descending()));
+        Page<Post> posts = postService.getAllPosts(page, size, Sort.by("date").descending());
+        List<PostForm> postForms = posts.getContent().stream()
+                .map(this::convertToPostForm)
+                .collect(Collectors.toList());
 
-        Map<String, Object> response = new HashMap<>();
-        response.put("posts", posts.getContent());
-        response.put("currentPage", posts.getNumber());
-        response.put("totalItems", posts.getTotalElements());
-        response.put("totalPages", posts.getTotalPages());
+        PagedPostResponse pagedResponse = new PagedPostResponse(
+                postForms,
+                posts.getNumber() + 1, // 0-based to 1-based
+                posts.getSize(),
+                posts.getTotalElements(),
+                posts.getTotalPages()
+        );
 
-        return ResponseEntity.ok().body(response);
+        return new ResponseForm<>(HttpStatus.OK, pagedResponse, "OK");
     }
 
-    @GetMapping("/mypage")
-    public ResponseEntity<?> myPage() {
-        Map<String, Object> response = new HashMap<>();
-        response.put("redirect", "/mypage");
-        response.put("message", "Redirecting to MyPage");
-        return ResponseEntity.ok().body(response);
+
+    @GetMapping("/search")
+    public ResponseForm<PagedPostResponse> searchPosts(
+            @RequestParam String title,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        if(size > 50) size = 50;
+        Page<Post> posts = postService.searchPostsByTitleInAllPosts(title,
+                PageRequest.of(page - 1, size, Sort.by("date").descending()));
+        List<PostForm> postForms = posts.getContent().stream()
+                .map(this::convertToPostForm)
+                .collect(Collectors.toList());
+
+        PagedPostResponse pagedResponse = new PagedPostResponse(
+                postForms,
+                posts.getNumber() + 1,
+                posts.getSize(),
+                posts.getTotalElements(),
+                posts.getTotalPages()
+        );
+
+        return new ResponseForm<>(HttpStatus.OK, pagedResponse, "OK");
+    }
+    @PostMapping("/{postId}/report")
+    public ResponseForm<ReportResponse.ReportData> reportPost(@PathVariable Long postId, @RequestBody ReportRequest reportRequest) {
+        try {
+            Post post = postService.getPost(postId);
+            if (post.getUser() == null) {
+                return new ResponseForm<>(HttpStatus.BAD_REQUEST, null, "Post with id " + postId + " has no associated user");
+            }
+            reportRequest.setReportedPostId(postId);
+            reportRequest.setReportedUserId(post.getUser().getId());
+            ReportResponse response = reportService.reportPost(reportRequest);
+            return new ResponseForm<>(HttpStatus.OK, response.getData(), "게시글 신고가 성공적으로 접수되었습니다.");
+        } catch (Exception e) {
+            return new ResponseForm<>(HttpStatus.INTERNAL_SERVER_ERROR, null, "An error occurred: " + e.getMessage());
+        }
     }
 
-    @GetMapping("/home")
-    public ResponseEntity<?> home() {
-        Map<String, Object> response = new HashMap<>();
-        response.put("redirect", "/home");
-        response.put("message", "Redirecting to Home");
-        return ResponseEntity.ok().body(response);
+    private PostForm convertToPostForm(Post post) {
+        return PostForm.builder()
+                .postId(post.getId())
+                .authorId(post.getUser().getId())
+                .title(post.getTitle())
+                .content(post.getContent())
+                .likesCount(post.getLikesCount())
+                .commentCnt(post.getCommentCnt())
+                .postType(String.valueOf(post.getPostType()))
+                .date(post.getDate())
+                .build();
     }
 
-    @GetMapping("/board")
-    public ResponseEntity<?> board() {
-        Map<String, Object> response = new HashMap<>();
-        response.put("redirect", "/board");
-        response.put("message", "Redirecting to Board");
-        return ResponseEntity.ok().body(response);
+
+    @Data
+    @AllArgsConstructor
+    public static class PagedPostResponse {
+        private List<PostForm> content;
+        private int pageNumber;
+        private int pageSize;
+        private long totalElements;
+        private int totalPages;
+    }
+    @Data
+    @Builder
+    @AllArgsConstructor
+    public static class PostForm {
+        private Long postId;
+        private Long authorId;
+        private String title;
+        private String content;
+        private Integer likesCount;
+        private Integer commentCnt;
+        private String postType;
+        private LocalDateTime date;
     }
 
-    @GetMapping("/friends")
-    public ResponseEntity<?> friendsList() {
-        Map<String, Object> response = new HashMap<>();
-        response.put("redirect", "/friends");
-        response.put("message", "Redirecting to Friends List");
-        return ResponseEntity.ok().body(response);
+    @Data
+    public static class ReportRequest {
+        private Long reportingUserId;
+        private String reportingUserNickname;
+        private Long reportedUserId;
+        private String reportedUserNickname;
+        private Long reportedPostId;
+        private String feedbackResult;
+        private String reasonForReport;
+        private String reportType;
+    }
+
+    @Data
+    public static class ReportResponse {
+        private String status;
+        private ReportData data;
+        private String message;
+
+        @Data
+        public static class ReportData {
+            private Long reportingUserId;
+            private String reportingUserNickname;
+            private Long reportedUserId;
+            private String reportedUserNickname;
+            private Long reportedPostId;
+            private String feedbackResult;
+            private String reasonForReport;
+            private String reportType;
+        }
+    }
+
+    @Data
+    @AllArgsConstructor
+    public static class ResponseForm<T> {
+        private HttpStatus status;
+        private T data;
+        private String message;
     }
 }
