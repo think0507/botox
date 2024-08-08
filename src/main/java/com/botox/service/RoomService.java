@@ -13,6 +13,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Random;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -51,6 +53,12 @@ public class RoomService {
         room.setRoomCapacityLimit(roomForm.getRoomCapacityLimit());
         room.setRoomUpdateTime(roomForm.getRoomUpdateTime().toLocalDateTime());
         room.setRoomCreateAt(LocalDateTime.now());
+
+        // 방에 있는 사용자의 수를 1로 설정 (방장 포함)
+        room.setRoomUserCount(1);
+
+        // 방장 추가
+        room.getParticipants().add(roomMaster);
 
         //room 객체 안에 모두 저장되있으면 반환 room 으로
         return roomRepository.save(room);
@@ -157,6 +165,38 @@ public class RoomService {
     public void joinRoom(Long roomNum, Long userId) {
         joinRoom(roomNum, userId, null);
     }
+
+    // 빠른 방 입장
+    public void enterRoom(Long userId) {
+        // userId를 이용해 User 객체를 찾습니다.
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundRoomException(userId + " 사용자를 찾을 수 없습니다."));
+
+        // 비밀번호가 설정되지 않았고, 최대 인원에 도달하지 않은 방을 조회합니다.
+        List<Room> availableRooms = roomRepository.findAll().stream()
+                .filter(room -> room.getRoomPassword() == null) // 비밀번호가 없음
+                .filter(room -> room.getRoomUserCount() != null &&
+                        room.getRoomUserCount() < room.getRoomCapacityLimit())
+                .collect(Collectors.toList());
+
+        if (availableRooms.isEmpty()) {
+            throw new IllegalStateException("입장할 수 있는 방이 없습니다.");
+        }
+
+        // 필터링된 방 중 랜덤으로 하나 선택
+        Room selectedRoom = availableRooms.get(new Random().nextInt(availableRooms.size()));
+
+        // 방에 있는 사용자의 수를 증가시킵니다.
+        int userCount = selectedRoom.getRoomUserCount() != null ? selectedRoom.getRoomUserCount() : 0;
+        selectedRoom.setRoomUserCount(userCount + 1);
+
+        // 참여자 목록에 해당 user를 추가합니다.
+        selectedRoom.getParticipants().add(user);
+
+        // selectedRoom 객체를 저장합니다.
+        roomRepository.save(selectedRoom);
+    }
+
 
     //참여자 수 총합 기능
     public Long getTotalUserCountByRoomContent(String roomContent) {

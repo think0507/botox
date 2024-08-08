@@ -142,6 +142,23 @@ public class RoomApiController {
         }
     }
 
+    // 빠른 방 입장 기능
+    @PostMapping("/rooms/enter")
+    public ResponseForm<Void> enterRoom(@RequestBody EnterRoomForm enterRoomForm) {
+        try {
+            roomService.enterRoom(enterRoomForm.getUserId());
+            return new ResponseForm<>(HttpStatus.NO_CONTENT, null, "빠른 방 입장을 완료했습니다.");
+        } catch (NotFoundRoomException e) {
+            return new ResponseForm<>(HttpStatus.NOT_FOUND, null, e.getMessage());
+        } catch (IllegalStateException e) {
+            return new ResponseForm<>(HttpStatus.NO_CONTENT, null, e.getMessage());
+        } catch (Exception e) {
+            log.error("빠른 Unexpected error", e);
+            return new ResponseForm<>(HttpStatus.INTERNAL_SERVER_ERROR, null, "빠른 예기치 않은 오류가 발생했습니다.");
+        }
+    }
+
+
     //게임별로 유저 수 측정하는 API
     @GetMapping("/rooms/{roomContent}/count")
     public ResponseForm<Long> getTotalUserCountByRoomContent(@PathVariable String roomContent) {
@@ -207,6 +224,13 @@ public class RoomApiController {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class LeaveRoomForm {
+        private Long userId;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class EnterRoomForm {
         private Long userId;
     }
 }
