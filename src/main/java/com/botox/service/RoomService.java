@@ -11,6 +11,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.swing.plaf.basic.BasicTreeUI;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Random;
@@ -21,6 +23,9 @@ import java.util.stream.Collectors;
 public class RoomService {
     private final RoomRepository roomRepository;
     private final UserRepository userRepository;
+
+    private final RedisLockService redisLockService;
+    private static final String LOCK_PREFIX = "ROOM_LOCK";
 
     //방 조회 기능
     public List<Room> getAllRoomByContent(String roomContent) {
@@ -167,24 +172,55 @@ public class RoomService {
     }
 
     // 빠른 방 입장
-    public void enterRoom(Long userId) {
-        // userId를 이용해 User 객체를 찾습니다.
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundRoomException(userId + " 사용자를 찾을 수 없습니다."));
+    @Transactional
+    public void enterRoom(String roomContent, Long userId) {
+        String lockKey = LOCK_PREFIX + userId;
 
-        // 비밀번호가 설정되지 않았고, 최대 인원에 도달하지 않은 방을 조회합니다.
-        List<Room> availableRooms = roomRepository.findAll().stream()
-                .filter(room -> room.getRoomPassword() == null) // 비밀번호가 없음
-                .filter(room -> room.getRoomUserCount() != null &&
-                        room.getRoomUserCount() < room.getRoomCapacityLimit())
-                .collect(Collectors.toList());
+        // 잠금 시도
+        boolean lockAcquired = redisLockService.acquireLock(lockKey, Duration.ofSeconds(1));
+        if (!lockAcquired) {
+            // 잠금을 획득하지 못한 경우 다른 방으로 이동 시도
+            enterRoomFallback(roomContent, userId);
+            return; // 다른 방으로 이동한 경우 종료
+        }
 
-        if (availableRooms.isEmpty()) {
+        try {
+            // 사용자 정보 조회
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new NotFoundRoomException("사용자를 찾을 수 없습니다: " + userId));
+
+            // 해당 roomContent로 방을 조회하고 입장
+            Room selectedRoom = findAvailableRoom(roomContent);
+            if (selectedRoom == null) {
+                throw new IllegalStateException("입장할 수 있는 방이 없습니다.");
+            }
+
+            // 방에 있는 사용자의 수를 증가시킵니다.
+            int userCount = selectedRoom.getRoomUserCount() != null ? selectedRoom.getRoomUserCount() : 0;
+            selectedRoom.setRoomUserCount(userCount + 1);
+
+            // 참여자 목록에 해당 user를 추가합니다.
+            selectedRoom.getParticipants().add(user);
+
+            // selectedRoom 객체를 저장합니다.
+            roomRepository.save(selectedRoom);
+
+        } finally {
+            // 잠금 해제
+            redisLockService.releaseLock(lockKey);
+        }
+    }
+
+    // 다른 사용자가 먼저 방에 접근할 경우 다른 방으로 자동으로 접속하는 기능
+    private void enterRoomFallback(String roomContent, Long userId) {
+        Room selectedRoom = findAvailableRoom(roomContent);
+        if (selectedRoom == null) {
             throw new IllegalStateException("입장할 수 있는 방이 없습니다.");
         }
 
-        // 필터링된 방 중 랜덤으로 하나 선택
-        Room selectedRoom = availableRooms.get(new Random().nextInt(availableRooms.size()));
+        // 사용자 정보 조회
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundRoomException("사용자를 찾을 수 없습니다: " + userId));
 
         // 방에 있는 사용자의 수를 증가시킵니다.
         int userCount = selectedRoom.getRoomUserCount() != null ? selectedRoom.getRoomUserCount() : 0;
@@ -195,6 +231,22 @@ public class RoomService {
 
         // selectedRoom 객체를 저장합니다.
         roomRepository.save(selectedRoom);
+    }
+
+    // 비밀번호가 설정되지 않았고, 최대 인원에 도달하지 않은 방을 조회합니다.
+    private Room findAvailableRoom(String roomContent) {
+        List<Room> availableRooms = roomRepository.findByRoomContent(roomContent).stream()
+                .filter(room -> room.getRoomPassword() == null) // 비밀번호가 없음
+                .filter(room -> room.getRoomUserCount() != null &&
+                        room.getRoomUserCount() < room.getRoomCapacityLimit())
+                .collect(Collectors.toList());
+
+        if (availableRooms.isEmpty()) {
+            return null; // 입장할 수 있는 방이 없음
+        }
+
+        // 필터링된 방 중 랜덤으로 하나 선택
+        return availableRooms.get(new Random().nextInt(availableRooms.size()));
     }
 
 

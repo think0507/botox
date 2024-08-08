@@ -143,10 +143,10 @@ public class RoomApiController {
     }
 
     // 빠른 방 입장 기능
-    @PostMapping("/rooms/enter")
-    public ResponseForm<Void> enterRoom(@RequestBody EnterRoomForm enterRoomForm) {
+    @PostMapping("/rooms/{roomContent}/enter")
+    public ResponseForm<Void> enterRoom(@PathVariable String roomContent, @RequestBody EnterRoomForm enterRoomForm) {
         try {
-            roomService.enterRoom(enterRoomForm.getUserId());
+            roomService.enterRoom(roomContent, enterRoomForm.getUserId());
             return new ResponseForm<>(HttpStatus.NO_CONTENT, null, "빠른 방 입장을 완료했습니다.");
         } catch (NotFoundRoomException e) {
             return new ResponseForm<>(HttpStatus.NOT_FOUND, null, e.getMessage());
