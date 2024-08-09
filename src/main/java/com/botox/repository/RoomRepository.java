@@ -5,7 +5,11 @@ import com.botox.repository.query.RoomRepositoryQuery;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface RoomRepository extends JpaRepository<Room,Long>, RoomRepositoryQuery {
     List<Room> findByRoomContent(String roomContent);
+
+    // 방 초대코드로 방 찾기
+    Optional<Room> findByInviteCode(String inviteCode);
 }

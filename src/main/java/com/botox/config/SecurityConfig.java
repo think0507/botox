@@ -36,7 +36,9 @@ public class SecurityConfig {
                                 "/api/users/signup",
                                 "/api/users/login",
                                 "/api/users/refresh",
-                                "/api/users/logout").permitAll()
+                                "/api/users/logout",
+                                "/api/rooms/guest-join/**" // 게스트 방 입장
+                        ).permitAll()
                         .anyRequest().authenticated()
                 )
                 .csrf(AbstractHttpConfigurer::disable)
@@ -78,6 +80,8 @@ public class SecurityConfig {
                 "/api/users/signup",
                 "/api/users/login",
                 "/api/users/refresh",
-                "/api/users/logout"));
+                "/api/users/logout",
+                "/api/rooms/guest-join/**" // 게스트 방 입장
+        ));
     }
 }
