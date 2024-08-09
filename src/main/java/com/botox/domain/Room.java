@@ -59,13 +59,8 @@ public class Room {
     @Column(name = "room_create_at")
     private LocalDateTime roomCreateAt;
 
-    @ManyToMany
-    @JoinTable(
-            name = "room_participants",
-            joinColumns = @JoinColumn(name = "room_id"),
-            inverseJoinColumns = @JoinColumn(name = "user_id")
-    )
-    private List<User> participants = new ArrayList<>();
+    @OneToMany(mappedBy = "room", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<RoomParticipant> participants = new ArrayList<>();
 
     public Long getRoomMasterId() {
         return this.roomMaster != null ? this.roomMaster.getId() : null;

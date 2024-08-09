@@ -173,6 +173,38 @@ public class RoomApiController {
         }
     }
 
+    // 방 강퇴 기능
+    @PostMapping("/rooms/{roomNum}/kick")
+    public ResponseForm<Void> kickUser(@PathVariable Long roomNum, @RequestBody KickUserForm kickUserForm) {
+        try {
+            roomService.kickUser(roomNum, kickUserForm.getRoomMasterId(), kickUserForm.getUserIdToKick());
+            return new ResponseForm<>(HttpStatus.NO_CONTENT, null, "사용자를 강퇴했습니다.");
+        } catch (NotFoundRoomException e) {
+            return new ResponseForm<>(HttpStatus.NOT_FOUND, null, e.getMessage());
+        } catch (IllegalArgumentException e) {
+            return new ResponseForm<>(HttpStatus.UNAUTHORIZED, null, "강퇴 권한이 없습니다.");
+        } catch (Exception e) {
+            log.error("Unexpected error", e);
+            return new ResponseForm<>(HttpStatus.INTERNAL_SERVER_ERROR, null, "예기치 않은 오류가 발생했습니다.");
+        }
+    }
+
+    // 방장 권한 위임 기능
+    @PostMapping("/rooms/{roomNum}/transfer")
+    public ResponseForm<Void> transferRoomMaster(@PathVariable Long roomNum, @RequestBody TransferMasterForm transferMasterForm) {
+        try {
+            roomService.transferRoomMaster(roomNum, transferMasterForm.getCurrentMasterId(), transferMasterForm.getNewMasterId());
+            return new ResponseForm<>(HttpStatus.NO_CONTENT, null, "방장 권한을 성공적으로 위임했습니다.");
+        } catch (NotFoundRoomException e) {
+            return new ResponseForm<>(HttpStatus.NOT_FOUND, null, e.getMessage());
+        } catch (IllegalArgumentException e) {
+            return new ResponseForm<>(HttpStatus.UNAUTHORIZED, null, "권한이 없습니다.");
+        } catch (Exception e) {
+            log.error("Unexpected error", e);
+            return new ResponseForm<>(HttpStatus.INTERNAL_SERVER_ERROR, null, "예기치 않은 오류가 발생했습니다.");
+        }
+    }
+
 
     private RoomForm convertRoomForm(Room room) {
         return RoomForm.builder()
@@ -180,15 +212,20 @@ public class RoomApiController {
                 .roomTitle(room.getRoomTitle())
                 .roomContent(room.getRoomContent())
                 .roomType(room.getRoomType())
-                .gameName(room.getGameName())
-                .roomPassword(room.getRoomPassword()) // 여기를 수정
+                .roomPassword(room.getRoomPassword())
                 .roomMasterId(room.getRoomMasterId() != null ? Long.valueOf(room.getRoomMasterId()) : null)
                 .roomStatus(room.getRoomStatus())
                 .roomCapacityLimit(room.getRoomCapacityLimit())
                 .roomUpdateTime(Timestamp.valueOf(room.getRoomUpdateTime()))
                 .roomCreateAt(Timestamp.valueOf(room.getRoomCreateAt()))
                 .roomUserCount(room.getRoomUserCount())
-                .participantIds(room.getParticipants().stream().map(User::getId).collect(Collectors.toList()))
+                //.participantIds(room.getParticipants().stream().map(User::getId).collect(Collectors.toList()))
+                //원래 room.getparticipantIds()가 List<user>가 아니라 List<RoomParticipant>를 반환하기 때문임
+                //그래서 User 객체의 ID를 직접 가져오려면 RoomParticipant 객체를 통해 접근해야 함
+                .participantIds(room.getParticipants().stream()
+                        .map(participant -> participant.getUser().getId())
+                        .collect(Collectors.toList()))
+
                 .build();
     }
 
@@ -201,7 +238,6 @@ public class RoomApiController {
         private String roomContent;
         private String roomPassword;
         private RoomType roomType;
-        private String gameName;
         private Long roomMasterId;
         private RoomStatus roomStatus;
         private Integer roomCapacityLimit;
@@ -218,6 +254,23 @@ public class RoomApiController {
     public static class JoinRoomForm {
         private Long userId;
         private String password;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class KickUserForm {
+        private Long roomMasterId;
+        private Long userIdToKick;
+    }
+
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class TransferMasterForm {
+        private Long currentMasterId;
+        private Long newMasterId;
     }
 
     @Data
