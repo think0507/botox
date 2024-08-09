@@ -63,8 +63,7 @@ public class RoomService {
         room.setRoomUserCount(1);
 
         // 방장 추가
-        room.getParticipants().add(roomMaster);
-
+        room.getParticipants().add(new RoomParticipant(room, roomMaster, LocalDateTime.now()));
         //room 객체 안에 모두 저장되있으면 반환 room 으로
         return roomRepository.save(room);
     }
@@ -209,7 +208,7 @@ public class RoomService {
             selectedRoom.setRoomUserCount(userCount + 1);
 
             // 참여자 목록에 해당 user를 추가합니다.
-            selectedRoom.getParticipants().add(user);
+            selectedRoom.getParticipants().add(new RoomParticipant());
 
             // selectedRoom 객체를 저장합니다.
             roomRepository.save(selectedRoom);
@@ -236,7 +235,7 @@ public class RoomService {
         selectedRoom.setRoomUserCount(userCount + 1);
 
         // 참여자 목록에 해당 user를 추가합니다.
-        selectedRoom.getParticipants().add(user);
+        selectedRoom.getParticipants().add(new RoomParticipant());
 
         // selectedRoom 객체를 저장합니다.
         roomRepository.save(selectedRoom);
