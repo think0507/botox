@@ -9,6 +9,7 @@ import com.botox.repository.RoomRepository;
 import com.botox.repository.UserRepository;
 import com.botox.repository.query.RoomRepositoryQuery;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.web.server.authorization.AuthorizationWebFilter;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -154,23 +155,41 @@ public class RoomService {
     // 방 입장 기능
     @Transactional
     public void joinRoom(Long roomNum, Long userId, String password) {
-        Room room = roomRepository.findById(roomNum)
-                .orElseThrow(() -> new NotFoundRoomException("해당 방을 찾을 수 없습니다: " + roomNum));
+        String lockKey = LOCK_PREFIX + roomNum;
 
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundRoomException("해당 사용자를 찾을 수 없습니다: " + userId));
+        // 잠금 시도
+        boolean lockAcquired = redisLockService.acquireLock(lockKey, Duration.ofSeconds(1));
 
-        if (room.getRoomPassword() != null && !room.getRoomPassword().isEmpty() && !room.getRoomPassword().equals(password)) {
-            throw new IllegalArgumentException("잘못된 비밀번호입니다.");
+        if (!lockAcquired) {
+            throw new IllegalStateException("다른 사용자가 먼저 방에 접근했습니다.");
         }
 
-        int userCount = room.getRoomUserCount() != null ? room.getRoomUserCount() : 0;
-        room.setRoomUserCount(userCount + 1);
+        try {
+            Room room = roomRepository.findById(roomNum)
+                    .orElseThrow(() -> new NotFoundRoomException("해당 방을 찾을 수 없습니다: " + roomNum));
 
-        RoomParticipant participant = new RoomParticipant(room, user, LocalDateTime.now());
-        room.getParticipants().add(participant);
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new NotFoundRoomException("해당 사용자를 찾을 수 없습니다: " + userId));
 
-        roomRepository.save(room);
+            if (room.getRoomPassword() != null && !room.getRoomPassword().isEmpty() && !room.getRoomPassword().equals(password)) {
+                throw new IllegalArgumentException("잘못된 비밀번호입니다.");
+            }
+
+            int userCount = room.getRoomUserCount() != null ? room.getRoomUserCount() : 0;
+            if (userCount >= room.getRoomCapacityLimit()) {
+                throw new IllegalStateException("방의 최대 인원 수를 초과했습니다.");
+            }
+            room.setRoomUserCount(userCount + 1);
+
+            RoomParticipant participant = new RoomParticipant(room, user, LocalDateTime.now());
+            room.getParticipants().add(participant);
+
+            roomRepository.save(room);
+
+        } finally {
+            // 잠금 해제
+            redisLockService.releaseLock(lockKey);
+        }
     }
 
     // 기존 방 입장 기능 (비밀번호 없이)
