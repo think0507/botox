@@ -1,5 +1,6 @@
 package com.botox.controller;
 
+import com.botox.config.jwt.TokenProvider;
 import com.botox.constant.RoomStatus;
 import com.botox.constant.RoomType;
 import com.botox.domain.Room;
@@ -23,6 +24,7 @@ import com.botox.domain.User;
 @Slf4j
 public class RoomApiController {
     private final RoomService roomService;
+    private final TokenProvider tokenProvider;
 
     // 게임 종류에 따른 방 목록 조회 기능
     @GetMapping("/rooms/{roomContent}")
@@ -138,6 +140,59 @@ public class RoomApiController {
             return new ResponseForm<>(HttpStatus.INTERNAL_SERVER_ERROR, null, "예기치 않은 오류가 발생했습니다.");
         }
     }
+
+    // 초대 링크 생성 기능
+    @PostMapping("/rooms/{roomNum}/invite-link")
+    public ResponseForm<String> generateInviteLink(@PathVariable Long roomNum) {
+        try {
+            String inviteLink = roomService.generateInviteLink(roomNum);
+            return new ResponseForm<>(HttpStatus.OK, inviteLink, "초대 링크 생성 완료");
+        } catch (NotFoundRoomException e) {
+            return new ResponseForm<>(HttpStatus.NOT_FOUND, null, e.getMessage());
+        } catch (Exception e) {
+            log.error("Unexpected error", e);
+            return new ResponseForm<>(HttpStatus.INTERNAL_SERVER_ERROR, null, "초대 링크 생성 중 오류가 발생했습니다.");
+        }
+    }
+
+
+    // 게스트로 방 입장 기능
+    @PostMapping("/rooms/guest-join/{inviteCode}")
+    public ResponseForm<String> joinRoomAsGuest(@PathVariable String inviteCode) {
+        try {
+            String guestToken = roomService.joinRoomAsGuest(inviteCode);
+            return new ResponseForm<>(HttpStatus.OK, guestToken, "게스트로 방에 입장했습니다.");
+        } catch (NotFoundRoomException e) {
+            return new ResponseForm<>(HttpStatus.NOT_FOUND, null, e.getMessage());
+        } catch (IllegalStateException e) {
+            return new ResponseForm<>(HttpStatus.BAD_REQUEST, null, e.getMessage());
+        } catch (Exception e) {
+            return new ResponseForm<>(HttpStatus.INTERNAL_SERVER_ERROR, null, "방 입장 중 오류가 발생했습니다.");
+        }
+    }
+
+    // 게스트 방 퇴장 기능
+    @PostMapping("/rooms/guest-leave")
+    public ResponseForm<Void> leaveRoomAsGuest(@RequestHeader("Authorization") String token) {
+        try {
+            // "Bearer " 접두사를 제거하여 실제 토큰 값만 추출
+            String tokenValue = token.startsWith("Bearer ") ? token.substring(7) : token;
+
+            if (!tokenProvider.validateToken(tokenValue)) {
+                return new ResponseForm<>(HttpStatus.UNAUTHORIZED, null, "유효하지 않은 토큰입니다.");
+            }
+
+            Long roomNum = tokenProvider.getRoomNumFromGuestToken(tokenValue);
+            roomService.removeGuestFromRoom(roomNum, tokenValue);
+
+            return new ResponseForm<>(HttpStatus.OK, null, "게스트가 방에서 나갔습니다.");
+        } catch (NotFoundRoomException e) {
+            return new ResponseForm<>(HttpStatus.NOT_FOUND, null, e.getMessage());
+        } catch (Exception e) {
+            return new ResponseForm<>(HttpStatus.INTERNAL_SERVER_ERROR, null, "방 퇴장 중 오류가 발생했습니다.");
+        }
+    }
+
 
     //게임별로 유저 수 측정하는 API
     @GetMapping("/rooms/{roomContent}/count")

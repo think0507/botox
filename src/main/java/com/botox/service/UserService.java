@@ -2,6 +2,7 @@ package com.botox.service;
 
 import com.botox.constant.UserStatus;
 import com.botox.domain.*;
+import com.botox.exception.UnauthorizedException;
 import com.botox.repository.UserRepository;
 import com.botox.config.jwt.TokenProvider;
 import lombok.RequiredArgsConstructor;
@@ -14,7 +15,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
+import java.time.LocalDate;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -82,7 +85,7 @@ public class UserService implements UserDetailsService {
                 updateUserStatus(user.getUsername(), UserStatus.ONLINE);
 
                 try {
-                    redisTemplate.opsForValue().set("TOKEN:" + user.getUsername(), accessToken, Duration.ofMinutes(10));
+                    redisTemplate.opsForValue().set("ACCESS_TOKEN:" + user.getUsername(), accessToken, Duration.ofMinutes(10));
                     redisTemplate.opsForValue().set("REFRESH_TOKEN:" + user.getUsername(), refreshToken, Duration.ofDays(7));
                 } catch (Exception e) {
                     System.err.println("Error storing tokens in Redis: " + e.getMessage());
@@ -108,7 +111,7 @@ public class UserService implements UserDetailsService {
             User user = userOptional.get();
             updateUserStatus(user.getUsername(), UserStatus.OFFLINE);
 
-            redisTemplate.delete("TOKEN:" + username);
+            redisTemplate.delete("ACCESS_TOKEN:" + username);
             redisTemplate.delete("REFRESH_TOKEN:" + username);
         } else {
             throw new UsernameNotFoundException("User not found with username: " + username);
@@ -123,7 +126,7 @@ public class UserService implements UserDetailsService {
                 User user = userOptional.get();
                 String newAccessToken = tokenProvider.generateAccessToken(user, Duration.ofMinutes(10));
 
-                redisTemplate.opsForValue().set("TOKEN:" + username, newAccessToken, Duration.ofMinutes(10));
+                redisTemplate.opsForValue().set("ACCESS_TOKEN:" + username, newAccessToken, Duration.ofMinutes(10));
                 redisTemplate.opsForValue().set("REFRESH_TOKEN:" + username, refreshToken, Duration.ofDays(7));
 
                 return new LoginResponseDTO(user.getUsername(), user.getPassword(), newAccessToken, refreshToken, user.getStatus());
@@ -200,5 +203,70 @@ public class UserService implements UserDetailsService {
         userDTO.setUserNickname(user.getUserNickname());
         userDTO.setStatus(user.getStatus());
         return userDTO;
+    }
+
+    // 유저 온도 증가
+    @Transactional
+    public UserDTO increaseUserTemperature(String token, String targetUsername) {
+        return updateUserTemperature(token, targetUsername, 1);
+    }
+
+    // 유저 온도 감소
+    @Transactional
+    public UserDTO decreaseUserTemperature(String token, String targetUsername) {
+        return updateUserTemperature(token, targetUsername, -1);
+    }
+
+    // 유저 온도 변경
+    @Transactional
+    public UserDTO updateUserTemperature(String token, String targetUsername, int temperatureChange) {
+        String actorUsername = getActorUsernameFromRedis(token);
+        if (actorUsername == null) {
+            throw new UnauthorizedException("인증되지 않은 사용자입니다.");
+        }
+
+        if (actorUsername.equals(targetUsername)) {
+            throw new IllegalArgumentException("자신의 온도는 변경할 수 없습니다.");
+        }
+
+        User target = userRepository.findByUsername(targetUsername)
+                .orElseThrow(() -> new RuntimeException("Target user not found"));
+
+        int currentTemp = target.getUserTemperatureLevel() != null ? target.getUserTemperatureLevel() : 0;
+
+        if ((currentTemp == 0 && temperatureChange < 0) || (currentTemp == 100 && temperatureChange > 0)) {
+            throw new IllegalStateException("온도를 더 이상 " +
+                    (temperatureChange > 0 ? "올릴" : "내릴") + " 수 없습니다.");
+        }
+
+        // 날짜 별 온도 변경 redis 에 저장
+        String redisKey = "user_temperature:" + actorUsername + ":" + targetUsername + ":" + LocalDate.now();
+        Boolean canUpdate = redisTemplate.opsForValue().setIfAbsent(redisKey, "updated", Duration.ofDays(1));
+
+        if (Boolean.FALSE.equals(canUpdate)) {
+            throw new RuntimeException("이미 오늘 이 사용자의 온도를 변경했습니다.");
+        }
+
+        int newTemp = currentTemp + temperatureChange;
+        newTemp = Math.max(0, Math.min(100, newTemp));
+
+        target.setUserTemperatureLevel(newTemp);
+        User updatedUser = userRepository.save(target);
+
+        return convertToDTO(updatedUser);
+    }
+
+    // Redis 에서 토큰을 통해 사용자 이름 획득
+    public String getActorUsernameFromRedis(String token) {
+        Set<String> keys = redisTemplate.keys("ACCESS_TOKEN:*");
+        if (keys != null) {
+            for (String key : keys) {
+                Object storedToken = redisTemplate.opsForValue().get(key);
+                if (storedToken != null && token.equals(storedToken.toString())) {
+                    return key.replace("ACCESS_TOKEN:", "");
+                }
+            }
+        }
+        return null;
     }
 }

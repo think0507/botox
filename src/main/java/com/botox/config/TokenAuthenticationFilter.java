@@ -27,7 +27,12 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         String requestURI = request.getRequestURI();
 
-        if (excludedPaths.contains(requestURI)) {
+        // 경로가 excludedPaths에 포함되면 인증 요구하지 않음
+        boolean isExcludedPath = excludedPaths.stream().anyMatch(excludedPath ->
+                requestURI.matches(excludedPath.replace("**", ".*"))
+        );
+
+        if (isExcludedPath) {
             filterChain.doFilter(request, response);
             return;
         }
@@ -47,6 +52,7 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
         }
         filterChain.doFilter(request, response);
     }
+
 
     private String getAccessToken(HttpServletRequest request) {
         String bearerToken = request.getHeader(AUTHORIZATION_HEADER);

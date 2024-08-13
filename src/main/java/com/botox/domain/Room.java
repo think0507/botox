@@ -65,6 +65,9 @@ public class Room {
     )
     private List<User> participants = new ArrayList<>();
 
+    @Column(name = "invite_code", unique = true)
+    private String inviteCode;
+
     public Long getRoomMasterId() {
         return this.roomMaster != null ? this.roomMaster.getId() : null;
     }

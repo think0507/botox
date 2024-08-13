@@ -1,8 +1,10 @@
 package com.botox.controller;
 
+import com.botox.config.jwt.TokenProvider;
 import com.botox.domain.ProfileDTO;
 import com.botox.domain.User;
 import com.botox.domain.*;
+import com.botox.exception.UnauthorizedException;
 import com.botox.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -24,6 +26,7 @@ public class UserController {
 
     private final UserService userService;
     private final PasswordEncoder passwordEncoder;
+    private final TokenProvider tokenProvider;
 
     @PostMapping("/signup")
     public ResponseForm<UserCreateForm> createUser(
@@ -85,7 +88,7 @@ public class UserController {
     }
 
     @PostMapping("/logout")
-    public ResponseForm<String> logout (@RequestBody Map < String, String > request){
+    public ResponseForm<String> logout(@RequestBody Map<String, String> request) {
         String username = request.get("username");
         try {
             userService.logout(username);
@@ -98,7 +101,7 @@ public class UserController {
     }
 
     @PostMapping("/refresh")
-    public ResponseForm<LoginResponseDTO> refreshAccessToken (@RequestBody Map < String, String > request){
+    public ResponseForm<LoginResponseDTO> refreshAccessToken(@RequestBody Map<String, String> request) {
         String username = request.get("username");
         String refreshToken = request.get("refreshToken");
         try {
@@ -149,7 +152,7 @@ public class UserController {
         String userProfile = updates.get("userProfile");
         String userProfilePic = updates.get("userProfilePic");
         String userNickname = updates.get("userNickname");
-        ProfileDTO updatedProfile = userService.updateUserProfile(username, userProfile, userProfilePic,userNickname);
+        ProfileDTO updatedProfile = userService.updateUserProfile(username, userProfile, userProfilePic, userNickname);
         return new ResponseForm<>(HttpStatus.OK, updatedProfile, "User profile updated successfully");
     }
 
@@ -159,11 +162,49 @@ public class UserController {
         ProfileDTO updatedProfile = userService.deleteUserProfile(username);
         return new ResponseForm<>(HttpStatus.OK, updatedProfile, "User profile deleted successfully");
     }
+
+
+
     // userProfile 조회
     @GetMapping("/{username}/profile")
     public ResponseForm<ProfileDTO> getUserProfile (@PathVariable String username) {
         ProfileDTO userProfile = userService.getUserProfile(username);
         return new ResponseForm<>(HttpStatus.OK, userProfile, "User profile retrieved successfully");
+    }
+
+
+    @PostMapping("/temperature/increase/{targetUsername}")
+    public ResponseForm<UserDTO> increaseUserTemperature(
+            @RequestHeader("Authorization") String authorizationHeader,
+            @PathVariable String targetUsername) {
+        try {
+            String token = authorizationHeader.replace("Bearer ", "");
+            UserDTO updatedUser = userService.increaseUserTemperature(token, targetUsername);
+            return new ResponseForm<>(HttpStatus.OK, updatedUser, targetUsername + "의 온도가 1 상승했습니다.");
+        } catch (UnauthorizedException e) {
+            return new ResponseForm<>(HttpStatus.UNAUTHORIZED, null, e.getMessage());
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            return new ResponseForm<>(HttpStatus.BAD_REQUEST, null, e.getMessage());
+        } catch (RuntimeException e) {
+            return new ResponseForm<>(HttpStatus.INTERNAL_SERVER_ERROR, null, e.getMessage());
+        }
+    }
+
+    @PostMapping("/temperature/decrease/{targetUsername}")
+    public ResponseForm<UserDTO> decreaseUserTemperature(
+            @RequestHeader("Authorization") String authorizationHeader,
+            @PathVariable String targetUsername) {
+        try {
+            String token = authorizationHeader.replace("Bearer ", "");
+            UserDTO updatedUser = userService.decreaseUserTemperature(token, targetUsername);
+            return new ResponseForm<>(HttpStatus.OK, updatedUser, targetUsername + "의 온도가 1 하락했습니다.");
+        } catch (UnauthorizedException e) {
+            return new ResponseForm<>(HttpStatus.UNAUTHORIZED, null, e.getMessage());
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            return new ResponseForm<>(HttpStatus.BAD_REQUEST, null, e.getMessage());
+        } catch (RuntimeException e) {
+            return new ResponseForm<>(HttpStatus.INTERNAL_SERVER_ERROR, null, e.getMessage());
+        }
     }
 }
 
