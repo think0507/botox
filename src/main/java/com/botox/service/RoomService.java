@@ -232,7 +232,7 @@ public class RoomService {
             throw new IllegalStateException("게스트 토큰 삭제에 실패했습니다.");
         }
     }
-}
+
     //참여자 수 총합 기능
     public Long getTotalUserCountByRoomContent(String roomContent) {
         Long totalUserCount = roomRepository.getTotalUserCountByRoomContent(roomContent);
@@ -242,3 +242,5 @@ public class RoomService {
         return totalUserCount;
     }
 }
+
+

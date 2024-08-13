@@ -68,7 +68,7 @@ public class UserService implements UserDetailsService {
         return userRepository.findByUsername(username);
     }
 
-    public LoginResponseDTO getAccessToken(User user, String rawPassword) {
+    public LoginResponseDTO getAccessToken(User user, String Password) {
         UserDetails userDetails;
         try {
             userDetails = loadUserByUsername(user.getUsername());
@@ -78,7 +78,7 @@ public class UserService implements UserDetailsService {
             return null;
         }
 
-        if (passwordEncoder.matches(rawPassword, userDetails.getPassword())) {
+        if (passwordEncoder.matches(Password, userDetails.getPassword())) {
             try {
                 String accessToken = tokenProvider.generateAccessToken(user, Duration.ofMinutes(10));
                 String refreshToken = tokenProvider.generateRefreshToken(user, Duration.ofDays(7));
