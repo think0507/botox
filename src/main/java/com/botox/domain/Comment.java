@@ -4,6 +4,9 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Table(name = "comment")
 @Getter @Setter
@@ -21,9 +24,12 @@ public class Comment {
     private String commentContent;
 
     @Column(name = "likes_count")
-    private Integer likesCount;
+    private Integer likesCount=0;
 
     @ManyToOne
     @JoinColumn(name = "post_id")
     private Post post;
+
+    @OneToMany(mappedBy = "comment", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CommentLike> likes = new ArrayList<>();
 }
