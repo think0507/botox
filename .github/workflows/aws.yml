@@ -78,3 +78,4 @@ jobs:
           curl -H "Content-Type: application/json" \
           -d '{"content": "EC2 배포 및 어플리케이션 재시작이 성공적으로 완료되었습니다."}' \
           https://discord.com/api/webhooks/1264611646203232317/liIfuQIymV3BqGNRxYzxbGbmPqjdqm1U6-J8gvDjBASCSG8AOEr9HBQvr6oHiSl2aFw0
+
