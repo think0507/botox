@@ -16,11 +16,11 @@ public class Post {
     @Column(name = "post_id")
     private Long postId;
 
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    @Column(nullable = false)
     private String title;
 
     @Column(columnDefinition = "TEXT")
@@ -29,7 +29,7 @@ public class Post {
     private LocalDateTime date;
 
     @Column(name = "likes_count")
-    private Integer likesCount;
+    private Integer likesCount = 0;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "post_type")
@@ -39,17 +39,12 @@ public class Post {
     private List<Comment> comments;
 
     @Column(name = "comment_cnt")
-    private Integer commentCnt;
+    private Integer commentCnt = 0;
 
+    @Column(name = "image_url")
+    private String imageUrl;
     @PrePersist
     protected void onCreate() {
         date = LocalDateTime.now();
     }
-
-
-    public Long getId() {
-        return this.postId;
-    }
-
-
 }

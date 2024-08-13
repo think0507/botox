@@ -12,6 +12,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.Duration;
 import java.util.Optional;
@@ -23,6 +24,7 @@ public class UserService implements UserDetailsService {
     private final TokenProvider tokenProvider;
     private final PasswordEncoder passwordEncoder;
     private final RedisTemplate<String, Object> redisTemplate;
+    private final S3UploadService s3UploadService;
 
     public UserCreateForm createUser(UserCreateForm userCreateForm) {
         User newUser = new User();
@@ -149,29 +151,39 @@ public class UserService implements UserDetailsService {
         return userRepository.findByUsername(username).map(this::convertToDTO);
     }
 
-    // 유저 삭제
     @Transactional
     public void deleteUser(String username) {
         userRepository.deleteByUsername(username);
     }
 
-    // userProfile 조회
     public ProfileDTO getUserProfile(String username) {
         User user = userRepository.findByUsername(username).orElseThrow(() -> new RuntimeException("User not found"));
         return new ProfileDTO(username, user.getUserNickname(), user.getUserProfile(), user.getUserProfilePic());
     }
 
-    // userProfile 생성 또는 수정
-    public ProfileDTO updateUserProfile(String username, String userProfile, String userProfilePic, String userNickname) {
+    @Transactional
+    public ProfileDTO updateUserProfile(String username, String userProfile, String userNickname, String nickname) {
         User user = userRepository.findByUsername(username).orElseThrow(() -> new RuntimeException("User not found"));
         user.setUserProfile(userProfile);
-        user.setUserProfilePic(userProfilePic);
         user.setUserNickname(userNickname);
         User updatedUser = userRepository.save(user);
         return convertToProfileDTO(updatedUser);
     }
 
-    // userProfile 삭제
+    @Transactional
+    public ProfileDTO updateProfileImage(String username, MultipartFile file) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        try {
+            String imageUrl = s3UploadService.uploadFile(file);
+            user.setUserProfilePic(imageUrl);
+            User updatedUser = userRepository.save(user);
+            return convertToProfileDTO(updatedUser);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to update profile image", e);
+        }
+    }
+
     public ProfileDTO deleteUserProfile(String username) {
         User user = userRepository.findByUsername(username).orElseThrow(() -> new RuntimeException("User not found"));
         user.setUserProfile(null);
@@ -180,7 +192,6 @@ public class UserService implements UserDetailsService {
         return convertToProfileDTO(updatedUser);
     }
 
-    // User -> ProfileDTO 변환 메서드
     private ProfileDTO convertToProfileDTO(User user) {
         ProfileDTO profileDTO = new ProfileDTO();
         profileDTO.setUsername(user.getUsername());

@@ -35,7 +35,8 @@ public class SecurityConfig {
                                 "/api/users/signup",
                                 "/api/users/login",
                                 "/api/users/refresh",
-                                "/api/users/logout").permitAll()
+                                "/api/users/logout",
+                                "/api/posts/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .csrf(csrf -> csrf.disable())
@@ -56,7 +57,7 @@ public class SecurityConfig {
                 "http://d3ao949apmj1lo.cloudfront.net",
                 "https://botox-chat.site",
                 "https://www.botox-chat.site",
-                "http://localhost:3000")); // 여러 도메인을 한 번에 설정
+                "http://localhost:3000"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
@@ -77,6 +78,7 @@ public class SecurityConfig {
                 "/api/users/signup",
                 "/api/users/login",
                 "/api/users/refresh",
-                "/api/users/logout"));
+                "/api/users/logout",
+                "/api/posts/**"));
     }
 }
