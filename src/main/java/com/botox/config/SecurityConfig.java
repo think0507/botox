@@ -37,7 +37,8 @@ public class SecurityConfig {
                                 "/api/users/login",
                                 "/api/users/refresh",
                                 "/api/users/logout",
-                                "/api/rooms/guest-join/**" // 게스트 방 입장
+                                "/api/rooms/guest-join/**", // 게스트 방 입장
+                                "/ws/**" // WebSocket 엔드포인트 허용
                         ).permitAll()
                         .anyRequest().authenticated()
                 )
