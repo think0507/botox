@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -36,10 +37,11 @@ public class SecurityConfig {
                                 "/api/users/login",
                                 "/api/users/refresh",
                                 "/api/users/logout",
-                                "/api/posts/**").permitAll()
+                                "/api/rooms/guest-join/**" // 게스트 방 입장
+                        ).permitAll()
                         .anyRequest().authenticated()
                 )
-                .csrf(csrf -> csrf.disable())
+                .csrf(AbstractHttpConfigurer::disable)
                 .headers(headers -> headers
                         .addHeaderWriter(new XFrameOptionsHeaderWriter(XFrameOptionsHeaderWriter.XFrameOptionsMode.SAMEORIGIN))
                 )
@@ -57,7 +59,7 @@ public class SecurityConfig {
                 "http://d3ao949apmj1lo.cloudfront.net",
                 "https://botox-chat.site",
                 "https://www.botox-chat.site",
-                "http://localhost:3000"));
+                "http://localhost:3000")); // 여러 도메인을 한 번에 설정
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
@@ -79,6 +81,7 @@ public class SecurityConfig {
                 "/api/users/login",
                 "/api/users/refresh",
                 "/api/users/logout",
-                "/api/posts/**"));
+                "/api/rooms/guest-join/**" // 게스트 방 입장
+        ));
     }
 }

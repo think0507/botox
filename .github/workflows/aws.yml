@@ -72,3 +72,10 @@ jobs:
             pkill -f botox-0.0.1-SNAPSHOT.jar || true
             nohup java -jar /home/ec2-user/botox-0.0.1-SNAPSHOT.jar --spring.profiles.active=prod > /dev/null 2>&1 &
           EOF
+
+      - name: Send Discord Notification
+        run: |
+          curl -H "Content-Type: application/json" \
+          -d '{"content": "EC2 배포 및 어플리케이션 재시작이 성공적으로 완료되었습니다."}' \
+          https://discord.com/api/webhooks/1264611646203232317/liIfuQIymV3BqGNRxYzxbGbmPqjdqm1U6-J8gvDjBASCSG8AOEr9HBQvr6oHiSl2aFw0
+
