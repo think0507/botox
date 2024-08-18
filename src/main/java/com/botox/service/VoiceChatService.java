@@ -14,27 +14,24 @@ import java.util.Set;
 public class VoiceChatService {
 
     // 방과 클라이언트 목록을 저장하는 Map
-    Map<String, Set<String>> rooms = new HashMap<>();
+    Map<String, Set<SocketIOClient>> rooms = new HashMap<>();
 
     // 방에 클라이언트 추가
-    public void addClientToRoom(String roomNum, String userId) {
-        // 방이 존재하지 않으면 생성
-        rooms.put(roomNum, new HashSet<>());
-        // 클라이언트를 방에 추가
-        rooms.get(roomNum).add(userId);
+    public void addClientToRoom(String roomNum, SocketIOClient client) {
+        rooms.putIfAbsent(roomNum, new HashSet<>());
+        rooms.get(roomNum).add(client);
     }
 
     // 방에서 클라이언트 제거
-    public void removeClientFromRoom(String roomNum, String userId) {
-        Set<String> clients = rooms.get(roomNum);
+    public void removeClientFromRoom(String roomNum, SocketIOClient client) {
+        Set<SocketIOClient> clients = rooms.get(roomNum);
         if (clients != null) {
-            clients.remove(userId);
+            clients.remove(client);
             if (clients.isEmpty()) {
                 rooms.remove(roomNum);
             }
         }
     }
-
 
     @Autowired
     public VoiceChatService(SocketIOServer socketIOServer) {
@@ -43,10 +40,10 @@ public class VoiceChatService {
         socketIOServer.addEventListener("enter_room", Map.class, (client, data, ackSender) -> {
             String userId = (String) data.get("userId");
             String roomNum = (String) data.get("roomNum");
-            addClientToRoom(roomNum, userId);
+            addClientToRoom(roomNum, client);
             System.out.println("User " + userId + " entered room " + roomNum);
 
-            // 현재 클라이언트에게만 이벤트를 전송
+            // 입장한 클라이언트에게만 이벤트 전송
             client.sendEvent("enter_room", new HashMap<String, String>() {{
                 put("userId", userId);
                 put("roomNum", roomNum);
@@ -57,10 +54,10 @@ public class VoiceChatService {
         socketIOServer.addEventListener("leave_room", Map.class, (client, data, ackSender) -> {
             String userId = (String) data.get("userId");
             String roomNum = (String) data.get("roomNum");
-            removeClientFromRoom(roomNum, userId);
+            removeClientFromRoom(roomNum, client);
             System.out.println("User " + userId + " left room " + roomNum);
 
-            // roomNum에 있는 다른 클라이언트들에게 개별 매개변수로 이벤트 전달
+            // 방을 떠난 클라이언트에게만 이벤트 전송
             client.sendEvent("leave_room", new HashMap<String, String>() {{
                 put("userId", userId);
                 put("roomNum", roomNum);
@@ -69,23 +66,49 @@ public class VoiceChatService {
 
         // "offer" 이벤트 처리
         socketIOServer.addEventListener("offer", Map.class, (client, data, ackSender) -> {
+            String toUserId = (String) data.get("to");
             String roomNum = (String) data.get("roomNum");
-            System.out.println("room " + roomNum + " send offer " + data);
-            socketIOServer.getRoomOperations(roomNum).sendEvent("offer", data);
+            System.out.println("Sending offer to " + toUserId + " in room " + roomNum);
+
+            // 특정 클라이언트에게만 offer 이벤트 전송
+            rooms.get(roomNum).stream()
+                    .filter(c -> {
+                        String userId = c.getHandshakeData().getSingleUrlParam("userId");
+                        if (userId == null) {
+                            System.out.println("UserId is null for client: " + c);
+                        }
+                        return userId != null && userId.equals(toUserId);
+                    })
+                    .forEach(c -> c.sendEvent("offer", data));
         });
+
 
         // "answer" 이벤트 처리
         socketIOServer.addEventListener("answer", Map.class, (client, data, ackSender) -> {
+            String toUserId = (String) data.get("to");
             String roomNum = (String) data.get("roomNum");
-            System.out.println("room " + roomNum + " send answer " + data);
-            socketIOServer.getRoomOperations(roomNum).sendEvent("answer", data);
+            System.out.println("Sending answer to " + toUserId + " in room " + roomNum);
+
+            // 특정 클라이언트에게만 answer 이벤트 전송
+            rooms.get(roomNum).stream()
+                    .filter(c -> c.getHandshakeData().getSingleUrlParam("userId").equals(toUserId))
+                    .forEach(c -> c.sendEvent("answer", data));
         });
 
         // "ice_candidate" 이벤트 처리
         socketIOServer.addEventListener("ice_candidate", Map.class, (client, data, ackSender) -> {
+            String toUserId = (String) data.get("to");
             String roomNum = (String) data.get("roomNum");
-            System.out.println("room " + roomNum + " send ice " + data);
-            socketIOServer.getRoomOperations(roomNum).sendEvent("ice_candidate", data);
+            System.out.println("Sending ICE candidate to " + toUserId + " in room " + roomNum);
+
+            // 특정 클라이언트에게만 ICE candidate 이벤트 전송
+            rooms.get(roomNum).stream()
+                    .filter(c -> {
+                        String userId = c.getHandshakeData().getSingleUrlParam("userId");
+                        return toUserId.equals(userId);
+                    })
+                    .forEach(c -> c.sendEvent("ice_candidate", data));
         });
+
     }
 }
