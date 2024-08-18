@@ -24,6 +24,8 @@ public class PostService {
     private UserRepository userRepository;
     @Autowired
     private S3UploadService s3UploadService;
+    @Autowired
+    private UserService userService;
 
     @Transactional
     public String uploadImage(MultipartFile file, Long userId, boolean isProfileImage) throws Exception {
@@ -73,7 +75,7 @@ public class PostService {
     @Transactional
     public void deletePost(Long postId, Long userId) {
         Post post = getPost(postId);
-        if (!post.getUser().getId().equals(userId)) {
+        if (!userService.canDeletePost(userId, post)) {
             throw new RuntimeException("You are not authorized to delete this post");
         }
         postRepository.delete(post);

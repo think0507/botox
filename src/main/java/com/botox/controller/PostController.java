@@ -122,6 +122,19 @@ public class PostController {
         }
     }
 
+    @DeleteMapping("/admin/{postId}")
+    public ResponseForm<Void> adminDeletePost(@PathVariable Long postId, @RequestParam Long userId) {
+        if (!userService.isAdmin(userId)) {
+            return new ResponseForm<>(HttpStatus.FORBIDDEN, null, "관리자만 이 기능을 사용할 수 있습니다.");
+        }
+        try {
+            postService.deletePost(postId, userId);
+            return new ResponseForm<>(HttpStatus.NO_CONTENT, null, "관리자 권한으로 게시글이 삭제되었습니다.");
+        } catch (Exception e) {
+            return new ResponseForm<>(HttpStatus.INTERNAL_SERVER_ERROR, null, "Error deleting post: " + e.getMessage());
+        }
+    }
+
     @GetMapping
     public ResponseForm<PagedPostResponse> getAllPosts(
             @RequestParam(defaultValue = "1") int page,

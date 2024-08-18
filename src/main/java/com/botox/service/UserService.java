@@ -1,5 +1,6 @@
 package com.botox.service;
 
+import com.botox.constant.UserRole;
 import com.botox.constant.UserStatus;
 import com.botox.domain.*;
 import com.botox.exception.UnauthorizedException;
@@ -279,5 +280,18 @@ public class UserService implements UserDetailsService {
             }
         }
         return null;
+    }
+
+    public boolean isAdmin(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        return user.getRole() == UserRole.ADMIN;
+    }
+
+    public boolean canDeletePost(Long userId, Post post) {
+        if (isAdmin(userId)) {
+            return true;  // 관리자는 모든 게시글 삭제 가능
+        }
+        return post.getUser().getId().equals(userId);  // 자신의 게시글만 삭제 가능
     }
 }
