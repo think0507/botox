@@ -116,8 +116,10 @@ public class RoomApiController {
     public ResponseForm<Void> leaveRoom(@PathVariable Long roomNum, @RequestBody LeaveRoomForm leaveRoomForm) {
         try {
             roomService.leaveRoom(roomNum, leaveRoomForm.getUserId());
+            log.info("User {} left room {}", leaveRoomForm.getUserId(), roomNum);
             return new ResponseForm<>(HttpStatus.NO_CONTENT, null, "방 나가기를 완료했습니다.");
         } catch (NotFoundRoomException e) {
+            log.error("Error room {}", roomNum, e);
             return new ResponseForm<>(HttpStatus.NOT_FOUND, null, e.getMessage());
         } catch (Exception e) {
             log.error("Unexpected error", e);
@@ -129,15 +131,17 @@ public class RoomApiController {
     @PostMapping("/rooms/{roomNum}/join")
     public ResponseForm<Void> joinRoom(@PathVariable Long roomNum, @RequestBody JoinRoomForm joinRoomForm) {
         try {
-            // 비밀번호를 포함하여 서비스 메서드 호출
             roomService.joinRoom(roomNum, joinRoomForm.getUserId(), joinRoomForm.getPassword());
+            log.info("User {} joined room {}", joinRoomForm.getUserId(), roomNum);
             return new ResponseForm<>(HttpStatus.NO_CONTENT, null, "방 입장을 완료했습니다.");
         } catch (NotFoundRoomException e) {
+            log.error("Error while joining room {}: {}", roomNum, e.getMessage());
             return new ResponseForm<>(HttpStatus.NOT_FOUND, null, e.getMessage());
         } catch (IllegalArgumentException e) {
+            log.error("Unauthorized attempt to join room {}: {}", roomNum, e.getMessage());
             return new ResponseForm<>(HttpStatus.UNAUTHORIZED, null, "잘못된 비밀번호입니다.");
         } catch (Exception e) {
-            log.error("Unexpected error", e);
+            log.error("Unexpected error while joining room {}: {}", roomNum, e);
             return new ResponseForm<>(HttpStatus.INTERNAL_SERVER_ERROR, null, "예기치 않은 오류가 발생했습니다.");
         }
     }
@@ -147,17 +151,19 @@ public class RoomApiController {
     public ResponseForm<Void> enterRoom(@PathVariable String roomContent, @RequestBody EnterRoomForm enterRoomForm) {
         try {
             roomService.enterRoom(roomContent, enterRoomForm.getUserId());
+            log.info("User {} entered room with content {}", enterRoomForm.getUserId(), roomContent);
             return new ResponseForm<>(HttpStatus.NO_CONTENT, null, "빠른 방 입장을 완료했습니다.");
         } catch (NotFoundRoomException e) {
+            log.error("Error while entering room with content {}: {}", roomContent, e.getMessage());
             return new ResponseForm<>(HttpStatus.NOT_FOUND, null, e.getMessage());
         } catch (IllegalStateException e) {
+            log.warn("State issue while entering room with content {}: {}", roomContent, e.getMessage());
             return new ResponseForm<>(HttpStatus.NO_CONTENT, null, e.getMessage());
         } catch (Exception e) {
-            log.error("빠른 Unexpected error", e);
+            log.error("Unexpected error while entering room with content {}: {}", roomContent, e);
             return new ResponseForm<>(HttpStatus.INTERNAL_SERVER_ERROR, null, "빠른 예기치 않은 오류가 발생했습니다.");
         }
     }
-
 
     //게임별로 유저 수 측정하는 API
     @GetMapping("/rooms/{roomContent}/count")

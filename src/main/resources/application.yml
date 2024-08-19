@@ -45,8 +45,12 @@ spring:
         format_sql: true
         default_batch_fetch_size: 100
 
+# 로깅 기능 구현
 logging:
+  config: classpath:logback.xml # Logback 설정 파일 경로 추가
   level:
+    test: warn
+    org.springframework: DEBUG
     org.hibernate.SQL: info
     org.hibernate.type: trace
     org.springframework.orm.jpa: DEBUG

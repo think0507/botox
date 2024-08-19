@@ -9,6 +9,7 @@ import com.botox.service.ReportService;
 import lombok.Data;
 import lombok.Builder;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -25,6 +26,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/posts")
+@Slf4j
 public class PostController {
 
     @Autowired
@@ -119,21 +121,44 @@ public class PostController {
 
         return new ResponseForm<>(HttpStatus.OK, pagedResponse, "OK");
     }
+
     @PostMapping("/{postId}/report")
     public ResponseForm<ReportResponse.ReportData> reportPost(@PathVariable Long postId, @RequestBody ReportRequest reportRequest) {
+        // 요청 수신 로그
+        log.info("Received request to report post with ID: {} and data: {}", postId, reportRequest);
+
         try {
+            // 게시글 조회
             Post post = postService.getPost(postId);
+
+            // 게시글에 연결된 사용자가 없는 경우 로그
             if (post.getUser() == null) {
-                return new ResponseForm<>(HttpStatus.BAD_REQUEST, null, "Post with id " + postId + " has no associated user");
+                String errorMessage = "Post with id " + postId + " has no associated user";
+                log.warn(errorMessage);
+                return new ResponseForm<>(HttpStatus.BAD_REQUEST, null, errorMessage);
             }
+
+            // 신고 요청 데이터 설정
             reportRequest.setReportedPostId(postId);
             reportRequest.setReportedUserId(post.getUser().getId());
+
+            // 신고 처리
             ReportResponse response = reportService.reportPost(reportRequest);
+
+            // 신고 성공 로그
+            log.info("Successfully reported post with ID: {}. Report data: {}", postId, response.getData());
+
+            // 성공 응답 반환
             return new ResponseForm<>(HttpStatus.OK, response.getData(), "게시글 신고가 성공적으로 접수되었습니다.");
         } catch (Exception e) {
+            // 예외 발생 로그
+            log.error("Unexpected error while reporting post with ID: {}. Data: {}", postId, reportRequest, e);
+
+            // 오류 응답 반환
             return new ResponseForm<>(HttpStatus.INTERNAL_SERVER_ERROR, null, "An error occurred: " + e.getMessage());
         }
     }
+
 
     private PostForm convertToPostForm(Post post) {
         return PostForm.builder()

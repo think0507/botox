@@ -92,20 +92,30 @@ public class CommentController {
     //댓글 신고 기능 구현
     @PostMapping("/comments/{commentId}/report")
     public ResponseForm<ReportForm> reportComment(@PathVariable Long commentId, @RequestBody ReportForm reportForm) {
+        // 신고 요청을 수신했을 때의 로그
+        log.info("Received request to report comment with ID: {} and data: {}", commentId, reportForm);
+
         try {
-            // reportForm에 commentId를 설정합니다.
+            // reportForm에 commentId를 설정
             reportForm.setReportedContentId(commentId);
-            // CommentReportService를 사용하여 신고를 처리하고 결과를 ReportForm 객체로 반환받습니다.
+
+            // 댓글 신고를 처리
             ReportForm reportedForm = commentReportService.reportComment(reportForm);
 
-            // 처리된 ReportForm 객체를 ResponseForm에 담아 클라이언트에게 HTTP 상태 코드와 함께 응답합니다.
+            // 신고 성공 로그
+            log.info("Successfully reported comment with ID: {}", commentId);
+
+            // 성공적인 응답 반환
             return new ResponseForm<>(HttpStatus.OK, reportedForm, "댓글 신고가 성공적으로 접수되었습니다.");
         } catch (Exception e) {
-            // 예기치 않은 오류가 발생할 경우 로그를 기록하고, INTERNAL_SERVER_ERROR 상태 코드와 함께 오류 메시지를 반환합니다.
-            log.error("Unexpected error", e);
+            // 예외가 발생했을 때의 로그
+            log.error("Unexpected error while reporting comment with ID: {} and data: {}", commentId, reportForm, e);
+
+            // 오류 응답 반환
             return new ResponseForm<>(HttpStatus.INTERNAL_SERVER_ERROR, null, "Unexpected error occurred.");
         }
     }
+
 
     //댓글 좋아요 기능 구현
     @PostMapping("/comments/{commentId}/like")
