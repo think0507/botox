@@ -10,7 +10,6 @@ public class RoomLogger {
     private static final Logger logger = Logger.getLogger(RoomLogger.class.getName());
 
     public static void RoomLog(
-            String logType,
             String action, // join, enter, leave
             Long roomNum,
             String roomContent,
@@ -31,8 +30,7 @@ public class RoomLogger {
         // 로그 메시지 형식: "User {userId} {action} {roomIdentifier}"
         String Message = String.format("User %s %-5s %s", userId, action, roomIdentifier);
 
-        String LogMessage = String.format(" %s | %-5s | %-20s | %s | %s",
-                logType,
+        String LogMessage = String.format("| %-5s | %-20s | %s | %s",
                 action,
                 Message,
                 CustomIpUtil.getClientIp(request),
@@ -42,6 +40,4 @@ public class RoomLogger {
         logger.info(LogMessage);
     }
 }
-//2024-08-20 13:57:58 - | join  | User 2 join  room 1  | 127.0.0.1 | PostmanRuntime/7.41.0
-//2024-08-20 13:58:01 - | enter | User 1 enter room A  | 127.0.0.1 | PostmanRuntime/7.41.0
 
