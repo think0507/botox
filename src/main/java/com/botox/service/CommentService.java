@@ -19,8 +19,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Optional;
 
-import static org.springframework.data.jpa.domain.AbstractPersistable_.id;
-
 @Service
 @RequiredArgsConstructor
 public class CommentService {
@@ -50,6 +48,7 @@ public class CommentService {
         return commentRepository.save(comment);
 
     }
+
 
     //댓글 조회
     @Transactional(readOnly = true)
@@ -98,5 +97,11 @@ public class CommentService {
             commentLikeRepository.save(like);
         }
         return commentRepository.save(comment);
+    }
+
+    // 댓글 ID로 조회 (새로 추가된 메서드)
+    @Transactional(readOnly = true)
+    public Optional<Comment> findById(Long commentId) {
+        return commentRepository.findById(commentId);
     }
 }

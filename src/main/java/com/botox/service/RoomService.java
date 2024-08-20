@@ -1,5 +1,6 @@
 package com.botox.service;
 
+import com.botox.config.jwt.TokenProvider;
 import com.botox.controller.RoomApiController;
 import com.botox.domain.Room;
 import com.botox.domain.RoomParticipant;
@@ -7,9 +8,9 @@ import com.botox.domain.User;
 import com.botox.exception.NotFoundRoomException;
 import com.botox.repository.RoomRepository;
 import com.botox.repository.UserRepository;
-import com.botox.repository.query.RoomRepositoryQuery;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.web.server.authorization.AuthorizationWebFilter;
+
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,12 +21,17 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Random;
 import java.util.stream.Collectors;
+import java.util.UUID;
+
+import static org.kurento.jsonrpc.client.JsonRpcClient.log;
 
 @Service
 @RequiredArgsConstructor
 public class RoomService {
     private final RoomRepository roomRepository;
     private final UserRepository userRepository;
+    private final TokenProvider tokenProvider;
+    private final RedisTemplate<String, Object> redisTemplate;
 
     private final RedisLockService redisLockService;
     private static final String LOCK_PREFIX = "ROOM_LOCK";
@@ -277,6 +283,89 @@ public class RoomService {
     }
 
 
+    //특정 방 조회
+    public Room getRoomById(Long roomNum){
+        Room room = roomRepository.findById(roomNum)
+                .orElseThrow(()->new NotFoundRoomException("해당 방을 찾을 수 없습니다: " +roomNum));
+
+        return room;
+    }
+
+
+
+    // 초대 링크 생성 기능
+    public String generateInviteLink(Long roomNum) {
+        Room room = roomRepository.findById(roomNum)
+                .orElseThrow(() -> new NotFoundRoomException("해당 방을 찾을 수 없습니다: " + roomNum));
+
+        if (room.getInviteCode() == null) {
+            String inviteCode = generateUniqueInviteCode();
+            room.setInviteCode(inviteCode);
+            roomRepository.save(room);
+        }
+
+        return "/api/rooms/guest-join/" + room.getInviteCode();
+    }
+
+    // 초대 링크 중복 방지 기능
+    private String generateUniqueInviteCode() {
+        String inviteCode;
+        do {
+            inviteCode = UUID.randomUUID().toString().substring(0, 8);
+        } while (roomRepository.findByInviteCode(inviteCode).isPresent());
+
+        return inviteCode;
+    }
+
+    @Transactional
+    public String joinRoomAsGuest(String inviteCode) {
+        Room room = roomRepository.findByInviteCode(inviteCode)
+                .orElseThrow(() -> new NotFoundRoomException("유효하지 않은 초대 코드입니다."));
+
+        if (room.getRoomUserCount() >= room.getRoomCapacityLimit()) {
+            throw new IllegalStateException("방이 가득 찼습니다.");
+        }
+
+        // 방 인원 카운트 증가
+        room.setRoomUserCount(room.getRoomUserCount() + 1);
+        roomRepository.save(room);
+
+        // 게스트용 JWT 생성
+        String guestToken = tokenProvider.generateGuestToken(room.getRoomNum());
+
+        return guestToken;
+    }
+
+
+    // 게스트 방 퇴장 기능
+    @Transactional
+    public void removeGuestFromRoom(Long roomNum, String token) {
+        Room room = roomRepository.findById(roomNum)
+                .orElseThrow(() -> new NotFoundRoomException("해당 방을 찾을 수 없습니다: " + roomNum));
+
+        // 방 인원 수 감소
+        if (room.getRoomUserCount() > 0) {
+            room.setRoomUserCount(room.getRoomUserCount() - 1);
+        }
+
+        // 방 정보 업데이트
+        roomRepository.save(room);
+
+        // 토큰에서 UUID 추출
+        String uuid = tokenProvider.getUUIDFromGuestToken(token);
+
+        // Redis 키 생성
+        String redisKey = "GUEST_TOKEN:" + roomNum + ":" + uuid;
+        log.info("Attempting to delete Redis key: {}", redisKey); // 디버깅 로그 추가
+
+        Boolean result = redisTemplate.delete(redisKey);
+
+        if (Boolean.FALSE.equals(result)) {
+            log.warn("Redis key {} was not deleted or did not exist", redisKey);
+            throw new IllegalStateException("게스트 토큰 삭제에 실패했습니다.");
+        }
+    }
+
     //참여자 수 총합 기능
     public Long getTotalUserCountByRoomContent(String roomContent) {
         Long totalUserCount = roomRepository.getTotalUserCountByRoomContent(roomContent);
@@ -368,3 +457,4 @@ public class RoomService {
         roomRepository.save(room);
     }
 }
+

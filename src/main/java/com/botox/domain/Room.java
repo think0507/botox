@@ -62,6 +62,9 @@ public class Room {
     @OneToMany(mappedBy = "room", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<RoomParticipant> participants = new ArrayList<>();
 
+    @Column(name = "invite_code", unique = true)
+    private String inviteCode;
+
     public Long getRoomMasterId() {
         return this.roomMaster != null ? this.roomMaster.getId() : null;
     }
