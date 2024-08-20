@@ -73,6 +73,7 @@ jobs:
             export DB_USERNAME=${DB_USERNAME}
             export DB_PASSWORD=${DB_PASSWORD}
             pkill -f botox-0.0.1-SNAPSHOT.jar || true
+            sudo kill -9 $(sudo lsof -t -i :8080)
             nohup java -jar /home/ec2-user/botox-0.0.1-SNAPSHOT.jar --spring.profiles.active=prod > /home/ec2-user/app.log 2>&1 &
           EOF
           
