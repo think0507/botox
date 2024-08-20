@@ -1,5 +1,6 @@
 package com.botox.service;
 
+import com.botox.constant.UserRole;
 import com.botox.constant.UserStatus;
 import com.botox.domain.*;
 import com.botox.exception.UnauthorizedException;
@@ -202,6 +203,7 @@ public class UserService implements UserDetailsService {
         userDTO.setUserTemperatureLevel(user.getUserTemperatureLevel());
         userDTO.setUserNickname(user.getUserNickname());
         userDTO.setStatus(user.getStatus());
+        userDTO.setUserRole(user.getRole());
         return userDTO;
     }
 

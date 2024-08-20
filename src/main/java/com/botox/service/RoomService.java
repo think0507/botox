@@ -1,28 +1,19 @@
 package com.botox.service;
 
 import com.botox.config.jwt.TokenProvider;
-import com.botox.controller.ResponseForm;
 import com.botox.controller.RoomApiController;
 import com.botox.domain.Room;
 import com.botox.domain.User;
 import com.botox.exception.NotFoundRoomException;
 import com.botox.repository.RoomRepository;
 import com.botox.repository.UserRepository;
-import com.botox.repository.query.RoomRepositoryQuery;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestHeader;
 
-import java.time.Duration;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Objects;
-import java.util.Set;
 import java.util.UUID;
 
 import static org.kurento.jsonrpc.client.JsonRpcClient.log;
@@ -159,6 +150,16 @@ public class RoomService {
         // room 객체를 저장합니다.
         roomRepository.save(room);
     }
+
+    //특정 방 조회
+    public Room getRoomById(Long roomNum){
+        Room room = roomRepository.findById(roomNum)
+                .orElseThrow(()->new NotFoundRoomException("해당 방을 찾을 수 없습니다: " +roomNum));
+
+        return room;
+    }
+
+
 
     // 초대 링크 생성 기능
     public String generateInviteLink(Long roomNum) {

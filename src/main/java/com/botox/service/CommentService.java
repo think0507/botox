@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -44,6 +45,7 @@ public class CommentService {
 
     }
 
+
     //댓글 조회
     @Transactional(readOnly = true)
     public List<Comment> getCommentsByPostId(Long postId) {
@@ -69,5 +71,11 @@ public class CommentService {
 
         comment.setLikesCount(comment.getLikesCount()+1);
         return commentRepository.save(comment);
+    }
+
+    // 댓글 ID로 조회 (새로 추가된 메서드)
+    @Transactional(readOnly = true)
+    public Optional<Comment> findById(Long commentId) {
+        return commentRepository.findById(commentId);
     }
 }

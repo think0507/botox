@@ -141,6 +141,21 @@ public class RoomApiController {
         }
     }
 
+
+    //특정 방 조회
+    @GetMapping("/rooms/{roomNum}")
+    public ResponseForm<RoomForm> getRoomApi(@PathVariable Long roomNum) {
+        try {
+            Room room = roomService.getRoomById(roomNum);
+            RoomForm roomForm = convertRoomForm(room);
+            return new ResponseForm<>(HttpStatus.OK, roomForm, "방 조회를 완료했습니다.");
+        } catch (NotFoundRoomException e) {
+            return new ResponseForm<>(HttpStatus.NOT_FOUND, null, e.getMessage());
+        } catch (Exception e) {
+            log.error("Unexpected error", e);
+            return new ResponseForm<>(HttpStatus.INTERNAL_SERVER_ERROR, null, "방 조회 중 오류가 발생했습니다.");
+        }
+    }
     // 초대 링크 생성 기능
     @PostMapping("/rooms/{roomNum}/invite-link")
     public ResponseForm<String> generateInviteLink(@PathVariable Long roomNum) {
