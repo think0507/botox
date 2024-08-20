@@ -122,11 +122,9 @@ public class PostController {
         return new ResponseForm<>(HttpStatus.OK, pagedResponse, "OK");
     }
 
+    // 게시글 신고
     @PostMapping("/{postId}/report")
     public ResponseForm<ReportResponse.ReportData> reportPost(@PathVariable Long postId, @RequestBody ReportRequest reportRequest) {
-        // 요청 수신 로그
-        log.info("Received request to report post with ID: {} and data: {}", postId, reportRequest);
-
         try {
             // 게시글 조회
             Post post = postService.getPost(postId);
@@ -146,8 +144,16 @@ public class PostController {
             ReportResponse response = reportService.reportPost(reportRequest);
 
             // 신고 성공 로그
-            log.info("Successfully reported post with ID: {}. Report data: {}", postId, response.getData());
-
+            log.info("게시글 신고가 성공적으로 접수되었습니다. 신고 번호: {}. 신고한 사람 ID: {}, 닉네임: {}, 신고받은 사람 ID: {}, 닉네임: {}, 신고된 게시글 ID: {}, 신고 결과: {}, 신고 사유: {}, 신고 유형: {}",
+                    postId,
+                    reportRequest.getReportingUserId(),
+                    reportRequest.getReportingUserNickname(),
+                    reportRequest.getReportedUserId(),
+                    reportRequest.getReportedUserNickname(),
+                    reportRequest.getReportedPostId(),
+                    reportRequest.getFeedbackResult(),
+                    reportRequest.getReasonForReport(),
+                    reportRequest.getReportType());
             // 성공 응답 반환
             return new ResponseForm<>(HttpStatus.OK, response.getData(), "게시글 신고가 성공적으로 접수되었습니다.");
         } catch (Exception e) {

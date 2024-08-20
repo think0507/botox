@@ -92,8 +92,6 @@ public class CommentController {
     //댓글 신고 기능 구현
     @PostMapping("/comments/{commentId}/report")
     public ResponseForm<ReportForm> reportComment(@PathVariable Long commentId, @RequestBody ReportForm reportForm) {
-        // 신고 요청을 수신했을 때의 로그
-        log.info("Received request to report comment with ID: {} and data: {}", commentId, reportForm);
 
         try {
             // reportForm에 commentId를 설정
@@ -103,7 +101,15 @@ public class CommentController {
             ReportForm reportedForm = commentReportService.reportComment(reportForm);
 
             // 신고 성공 로그
-            log.info("Successfully reported comment with ID: {}", commentId);
+            log.info("댓글 신고가 성공적으로 접수되었습니다. 댓글 ID: {}. 신고한 사용자 ID: {}, 닉네임: {}, 신고받은 사용자 ID: {}, 닉네임: {}, 피드백 결과: {}, 신고 사유: {}, 신고 유형: {}",
+                    commentId,
+                    reportForm.getReportingUserId(),
+                    reportForm.getReportingUserNickname(),
+                    reportForm.getReportedUserId(),
+                    reportForm.getReportedUserNickname(),
+                    reportForm.getFeedbackResult(),
+                    reportForm.getReasonForReport(),
+                    reportForm.getReportType());
 
             // 성공적인 응답 반환
             return new ResponseForm<>(HttpStatus.OK, reportedForm, "댓글 신고가 성공적으로 접수되었습니다.");
