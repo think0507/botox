@@ -1,11 +1,15 @@
 package com.botox.domain;
 
+import com.botox.domain.Room;
+import com.botox.domain.User;
 import jakarta.persistence.*;
-
+import lombok.Getter;
+import lombok.Setter;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "room_user")
+@Getter @Setter
 public class RoomUser {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -16,11 +20,12 @@ public class RoomUser {
     private Room room;
 
     @ManyToOne
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "user_id", referencedColumnName = "id")
     private User user;
 
+    @Column(name = "join_time")
     private LocalDateTime joinTime;
-    private LocalDateTime leaveTime;
 
-    // Getters, setters, constructors
+    @Column(name = "leave_time")
+    private LocalDateTime leaveTime;
 }

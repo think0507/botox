@@ -12,6 +12,14 @@ java {
 		languageVersion = JavaLanguageVersion.of(17)
 	}
 }
+// 기본 jar 태스크를 비활성화하여 plain JAR 파일이 생성되지 않도록 설정 2
+jar {
+	enabled = false
+}
+
+bootJar {
+	mainClass.set('com.botox.BotoxApplication')
+}
 
 configurations {
 	compileOnly {
@@ -27,14 +35,29 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.springframework.boot:spring-boot-starter-jdbc'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
-	implementation 'org.springframework.boot:spring-boot-starter'
-	implementation 'mysql:mysql-connector-java:8.0.33' // MySQL JDBC 드라이버 버전 추가
+	implementation 'org.springframework.boot:spring-boot-starter-security' // Spring Security dependency
+	implementation 'io.jsonwebtoken:jjwt-api:0.11.5' // JWT dependency
+	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5' // JWT implementation
+	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5' // JWT with Jackson support
+	implementation 'org.springframework.boot:spring-boot-starter-data-redis' // Redis dependency
+	implementation 'org.springframework.session:spring-session-data-redis' // Spring Session Redis dependency
+	implementation 'org.springframework.boot:spring-boot-starter-cache'
+	implementation 'org.redisson:redisson:3.34.1'
 	compileOnly 'org.projectlombok:lombok'
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
+	runtimeOnly 'com.h2database:h2'
 	annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
 	annotationProcessor 'org.projectlombok:lombok'
-	runtimeOnly 'com.h2database:h2' // (Optional) H2 데이터베이스 의존성, 테스트 환경에서 사용
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	implementation 'org.springframework.boot:spring-boot-starter-validation' // validation
+	implementation 'mysql:mysql-connector-java:8.0.33' // MySQL JDBC driver
+
+	implementation 'org.springframework.boot:spring-boot-starter-websocket'
+	implementation 'org.kurento:kurento-client:6.14.0'
+	implementation 'com.google.code.gson:gson:2.8.9'
+	implementation 'com.corundumstudio.socketio:netty-socketio:2.0.3'
+	// stomp
+	implementation 'org.webjars:stomp-websocket:2.3.4'
 }
 
 tasks.named('test') {

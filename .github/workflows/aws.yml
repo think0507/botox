@@ -1,4 +1,4 @@
-name: EC2배포!
+name: EC2배포
 
 on:
   push:
@@ -48,6 +48,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: spring-app
+          path: spring-app/
 
       - name: SSH 키 설정
         run: |
@@ -59,7 +60,7 @@ jobs:
       - name: 디버깅 로그
         run: |
           echo "아티팩트 다운로드 경로 확인:"
-          ls -al $GITHUB_WORKSPACE
+          ls -al $GITHUB_WORKSPACE/spring-app
 
       - name: Deploy to EC2 (Blue)
         env:
@@ -67,12 +68,20 @@ jobs:
           DB_USERNAME: ${{ secrets.DB_USERNAME }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
         run: |
-          scp -i $HOME/.ssh/id_rsa -o StrictHostKeyChecking=no $GITHUB_WORKSPACE/botox-0.0.1-SNAPSHOT.jar ec2-user@${{ secrets.EC2_BLUE_IP }}:/home/ec2-user/
-          ssh -i $HOME/.ssh/id_rsa -o StrictHostKeyChecking=no ec2-user@${{ secrets.EC2_BLUE_IP }} 'bash -s' <<'EOF'
-            export DB_URL=${DB_URL}
-            export DB_USERNAME=${DB_USERNAME}
-            export DB_PASSWORD=${DB_PASSWORD}
+          scp -i $HOME/.ssh/id_rsa -o StrictHostKeyChecking=no $GITHUB_WORKSPACE/spring-app/botox-0.0.1-SNAPSHOT.jar ec2-user@${{ secrets.EC2_BLUE_IP }}:/home/ec2-user/
+          ssh -i $HOME/.ssh/id_rsa -o StrictHostKeyChecking=no ec2-user@${{ secrets.EC2_BLUE_IP }} <<'EOF'
+            export DB_URL=${{ secrets.DB_URL }}
+            export DB_USERNAME=${{ secrets.DB_USERNAME }}
+            export DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+            echo "DB_URL: ${DB_URL}"
+            echo "DB_USERNAME: ${DB_USERNAME}"
+            echo "DB_PASSWORD: ${DB_PASSWORD}"
             pkill -f botox-0.0.1-SNAPSHOT.jar || true
             nohup java -jar /home/ec2-user/botox-0.0.1-SNAPSHOT.jar --spring.profiles.active=prod > /home/ec2-user/app.log 2>&1 &
           EOF
-          
+
+      - name: Send Discord Notification
+        run: |
+          curl -H "Content-Type: application/json" \
+          -d '{"content": "EC2 배포 및 어플리케이션 재시작이 성공적으로 완료되었습니다."}' \
+          https://discord.com/api/webhooks/1264611646203232317/liIfuQIymV3BqGNRxYzxbGbmPqjdqm1U6-J8gvDjBASCSG8AOEr9HBQvr6oHiSl2aFw0
