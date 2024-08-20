@@ -10,6 +10,13 @@ jobs:
   test-and-build:
     runs-on: ubuntu-latest
 
+    services:
+      redis:
+        image: redis:latest
+        ports:
+          - 6379:6379
+        options: --health-cmd "redis-cli ping" --health-interval=10s --health-timeout=5s --health-retries=5
+
     steps:
       - name: 코드 체크아웃
         uses: actions/checkout@v4
@@ -78,4 +85,3 @@ jobs:
           curl -H "Content-Type: application/json" \
           -d '{"content": "EC2 배포 및 어플리케이션 재시작이 성공적으로 완료되었습니다."}' \
           https://discord.com/api/webhooks/1264611646203232317/liIfuQIymV3BqGNRxYzxbGbmPqjdqm1U6-J8gvDjBASCSG8AOEr9HBQvr6oHiSl2aFw0
-
