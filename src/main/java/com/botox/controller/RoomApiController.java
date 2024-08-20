@@ -4,7 +4,9 @@ import com.botox.constant.RoomStatus;
 import com.botox.constant.RoomType;
 import com.botox.domain.Room;
 import com.botox.exception.NotFoundRoomException;
+import com.botox.logger.RoomLogger;
 import com.botox.service.RoomService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -113,55 +115,56 @@ public class RoomApiController {
 
     // 방 나가기 기능
     @PostMapping("/rooms/{roomNum}/leave")
-    public ResponseForm<Void> leaveRoom(@PathVariable Long roomNum, @RequestBody LeaveRoomForm leaveRoomForm) {
+    public ResponseForm<Void> leaveRoom(@PathVariable Long roomNum, @RequestBody LeaveRoomForm leaveRoomForm, HttpServletRequest request) {
         try {
             roomService.leaveRoom(roomNum, leaveRoomForm.getUserId());
-            log.info("User {} left room {}", leaveRoomForm.getUserId(), roomNum);
+            RoomLogger.RoomLog("INFO", "leave", roomNum, null, leaveRoomForm.getUserId(), request);
             return new ResponseForm<>(HttpStatus.NO_CONTENT, null, "방 나가기를 완료했습니다.");
         } catch (NotFoundRoomException e) {
-            log.error("Error room {}", roomNum, e);
+            RoomLogger.RoomLog("ERROR", "leave", roomNum, null, leaveRoomForm.getUserId(), request);
             return new ResponseForm<>(HttpStatus.NOT_FOUND, null, e.getMessage());
         } catch (Exception e) {
-            log.error("Unexpected error", e);
+            RoomLogger.RoomLog("ERROR", "leave", roomNum, null, leaveRoomForm.getUserId(), request);
             return new ResponseForm<>(HttpStatus.INTERNAL_SERVER_ERROR, null, "예기치 않은 오류가 발생했습니다.");
         }
     }
 
+
     // 방 입장 기능
     @PostMapping("/rooms/{roomNum}/join")
-    public ResponseForm<Void> joinRoom(@PathVariable Long roomNum, @RequestBody JoinRoomForm joinRoomForm) {
+    public ResponseForm<Void> joinRoom(@PathVariable Long roomNum, @RequestBody JoinRoomForm joinRoomForm, HttpServletRequest request) {
         try {
             roomService.joinRoom(roomNum, joinRoomForm.getUserId(), joinRoomForm.getPassword());
-            log.info("User {} joined room {}", joinRoomForm.getUserId(), roomNum);
+            RoomLogger.RoomLog("INFO", "join", roomNum, null, joinRoomForm.getUserId(), request);
             return new ResponseForm<>(HttpStatus.NO_CONTENT, null, "방 입장을 완료했습니다.");
         } catch (NotFoundRoomException e) {
-            log.error("Error while joining room {}: {}", roomNum, e.getMessage());
+            RoomLogger.RoomLog("ERROR", "join", roomNum, null, joinRoomForm.getUserId(), request);
             return new ResponseForm<>(HttpStatus.NOT_FOUND, null, e.getMessage());
         } catch (IllegalArgumentException e) {
-            log.error("Unauthorized attempt to join room {}: {}", roomNum, e.getMessage());
+            RoomLogger.RoomLog("ERROR", "join", roomNum, null, joinRoomForm.getUserId(), request);
             return new ResponseForm<>(HttpStatus.UNAUTHORIZED, null, "잘못된 비밀번호입니다.");
         } catch (Exception e) {
-            log.error("Unexpected error while joining room {}: {}", roomNum, e);
+            RoomLogger.RoomLog("ERROR", "join", roomNum, null, joinRoomForm.getUserId(), request);
             return new ResponseForm<>(HttpStatus.INTERNAL_SERVER_ERROR, null, "예기치 않은 오류가 발생했습니다.");
         }
     }
 
     // 빠른 방 입장 기능
     @PostMapping("/rooms/{roomContent}/enter")
-    public ResponseForm<Void> enterRoom(@PathVariable String roomContent, @RequestBody EnterRoomForm enterRoomForm) {
+    public ResponseForm<Void> enterRoom(@PathVariable String roomContent, @RequestBody EnterRoomForm enterRoomForm, HttpServletRequest request) {
         try {
             roomService.enterRoom(roomContent, enterRoomForm.getUserId());
-            log.info("User {} entered room with content {}", enterRoomForm.getUserId(), roomContent);
+            RoomLogger.RoomLog("INFO", "enter", null, roomContent, enterRoomForm.getUserId(), request);
             return new ResponseForm<>(HttpStatus.NO_CONTENT, null, "빠른 방 입장을 완료했습니다.");
         } catch (NotFoundRoomException e) {
-            log.error("Error while entering room with content {}: {}", roomContent, e.getMessage());
+            RoomLogger.RoomLog("ERROR", "enter", null, roomContent, enterRoomForm.getUserId(), request);
             return new ResponseForm<>(HttpStatus.NOT_FOUND, null, e.getMessage());
         } catch (IllegalStateException e) {
-            log.warn("State issue while entering room with content {}: {}", roomContent, e.getMessage());
+            RoomLogger.RoomLog("WARN", "enter", null, roomContent, enterRoomForm.getUserId(), request);
             return new ResponseForm<>(HttpStatus.NO_CONTENT, null, e.getMessage());
         } catch (Exception e) {
-            log.error("Unexpected error while entering room with content {}: {}", roomContent, e);
-            return new ResponseForm<>(HttpStatus.INTERNAL_SERVER_ERROR, null, "빠른 예기치 않은 오류가 발생했습니다.");
+            RoomLogger.RoomLog("ERROR", "enter", null, roomContent, enterRoomForm.getUserId(), request);
+            return new ResponseForm<>(HttpStatus.INTERNAL_SERVER_ERROR, null, "예기치 않은 오류가 발생했습니다.");
         }
     }
 
