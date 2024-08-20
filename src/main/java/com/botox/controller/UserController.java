@@ -56,7 +56,9 @@ public class UserController {
         } catch (Exception e) {
             bindingResult.reject("signupFailed", e.getMessage());
             return new ResponseForm<>(HttpStatus.INTERNAL_SERVER_ERROR, null, e.getMessage());
+
         }
+
 
         // 3. 회원 가입 성공
         return new ResponseForm<>(HttpStatus.OK, userCreateForm, "회원 가입이 성공적으로 완료되었습니다.");

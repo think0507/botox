@@ -1,9 +1,12 @@
 package com.botox.repository;
 
 import com.botox.domain.User;
+import jakarta.persistence.metamodel.SingularAttribute;
+import org.springframework.data.jpa.domain.AbstractPersistable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.Optional;
 
@@ -19,4 +22,5 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     // 로그인 인증 시 유저 유무 확인 가능
     boolean existsByUsername(String username);
+
 }
