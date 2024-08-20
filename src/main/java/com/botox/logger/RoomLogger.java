@@ -7,7 +7,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.util.logging.Logger;
 
 public class RoomLogger {
-    private static final Logger logger = Logger.getLogger(RoomApiController.class.getName());
+    private static final Logger logger = Logger.getLogger(RoomLogger.class.getName());
 
     public static void RoomLog(
             String logType,

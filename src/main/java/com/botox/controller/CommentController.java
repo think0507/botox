@@ -4,8 +4,10 @@ import com.botox.domain.Comment;
 import com.botox.domain.Report;
 import com.botox.constant.ReportType;
 import com.botox.exception.NotFoundCommentException;
+import com.botox.logger.CommentLogger;
 import com.botox.service.CommentService;
 import com.botox.service.CommentReportService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -91,38 +93,26 @@ public class CommentController {
 
     //댓글 신고 기능 구현
     @PostMapping("/comments/{commentId}/report")
-    public ResponseForm<ReportForm> reportComment(@PathVariable Long commentId, @RequestBody ReportForm reportForm) {
-
+    public ResponseForm<ReportForm> reportComment(@PathVariable Long commentId, @RequestBody ReportForm reportForm, HttpServletRequest request) {
         try {
-            // reportForm에 commentId를 설정
-            reportForm.setReportedContentId(commentId);
-
-            // 댓글 신고를 처리
             ReportForm reportedForm = commentReportService.reportComment(reportForm);
-
-            // 신고 성공 로그
-            log.info("댓글 신고가 성공적으로 접수되었습니다. 댓글 ID: {}. 신고한 사용자 ID: {}, 닉네임: {}, 신고받은 사용자 ID: {}, 닉네임: {}, 피드백 결과: {}, 신고 사유: {}, 신고 유형: {}",
-                    commentId,
-                    reportForm.getReportingUserId(),
+            CommentLogger.logCommentReport(
+                    "COMMENT_REPORT",
+                    "REPORT",
+                    commentId.toString(),
+                    reportForm.getReportedContentId().toString(),
+                    reportForm.getReportingUserId().toString(),
                     reportForm.getReportingUserNickname(),
-                    reportForm.getReportedUserId(),
+                    reportForm.getReportedUserId().toString(),
                     reportForm.getReportedUserNickname(),
-                    reportForm.getFeedbackResult(),
                     reportForm.getReasonForReport(),
-                    reportForm.getReportType());
-
-            // 성공적인 응답 반환
+                    request
+            );
             return new ResponseForm<>(HttpStatus.OK, reportedForm, "댓글 신고가 성공적으로 접수되었습니다.");
         } catch (Exception e) {
-            // 예외가 발생했을 때의 로그
-            log.error("Unexpected error while reporting comment with ID: {} and data: {}", commentId, reportForm, e);
-
-            // 오류 응답 반환
-            return new ResponseForm<>(HttpStatus.INTERNAL_SERVER_ERROR, null, "Unexpected error occurred.");
+            return new ResponseForm<>(HttpStatus.INTERNAL_SERVER_ERROR, null, "An error occurred: " + e.getMessage());
         }
     }
-
-
     //댓글 좋아요 기능 구현
     @PostMapping("/comments/{commentId}/like")
     public ResponseForm<CommentForm> likeComment(@PathVariable Long commentId) {

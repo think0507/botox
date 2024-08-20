@@ -31,7 +31,7 @@
             <totalSizeCap>1GB</totalSizeCap>
         </rollingPolicy>
         <encoder>
-            <pattern>%d{yyyy-MM-dd HH:mm:ss} %logger{36} - %msg%n</pattern>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss} - %msg%n</pattern>
         </encoder>
     </appender>
 
@@ -44,7 +44,7 @@
             <totalSizeCap>1GB</totalSizeCap>
         </rollingPolicy>
         <encoder>
-            <pattern>%d{yyyy-MM-dd HH:mm:ss} %logger{36} - %msg%n</pattern>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss} - %msg%n</pattern>
         </encoder>
     </appender>
 
@@ -54,17 +54,17 @@
     </root>
 
     <!-- 방 입장/퇴장 로그 설정 -->
-    <logger name="com.botox.controller.RoomApiController" level="INFO" additivity="false">
+    <logger name="com.botox.logger.RoomLogger" level="INFO" additivity="false">
         <appender-ref ref="ROOM_ACTIVITY_FILE" />
     </logger>
 
     <!-- 게시글 신고 로그 설정 -->
-    <logger name="com.botox.controller.PostController" level="INFO" additivity="false">
+    <logger name="com.botox.logger.PostLogger" level="INFO" additivity="false">
         <appender-ref ref="POST_REPORT_FILE" />
     </logger>
 
     <!-- 댓글 신고 로그 설정 -->
-    <logger name="com.botox.controller.CommentController" level="INFO" additivity="false">
+    <logger name="com.botox.logger.CommentLogger" level="INFO" additivity="false">
         <appender-ref ref="COMMENT_REPORT_FILE" />
     </logger>
 
