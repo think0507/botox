@@ -60,6 +60,9 @@ dependencies {
 	implementation 'org.springframework.cloud:spring-cloud-aws-context:2.2.6.RELEASE'
 	implementation platform('com.amazonaws:aws-java-sdk-bom:1.11.1000')
 	implementation 'com.amazonaws:aws-java-sdk-s3'
+
+	implementation 'com.corundumstudio.socketio:netty-socketio:2.0.3'
+	implementation 'org.webjars:stomp-websocket:2.3.4'
 }
 
 tasks.named('test') {
