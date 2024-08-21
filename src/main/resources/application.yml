@@ -1,4 +1,6 @@
 spring:
+  cache:
+    type: redis
   profiles:
     active: dev
   data:

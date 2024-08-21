@@ -1,6 +1,7 @@
 package com.botox.controller;
 
 import com.botox.config.jwt.TokenProvider;
+import com.botox.constant.UserStatus;
 import com.botox.domain.ProfileDTO;
 import com.botox.domain.User;
 import com.botox.domain.*;
@@ -8,6 +9,9 @@ import com.botox.exception.UnauthorizedException;
 import com.botox.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +21,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -52,7 +57,9 @@ public class UserController {
         } catch (Exception e) {
             bindingResult.reject("signupFailed", e.getMessage());
             return new ResponseForm<>(HttpStatus.INTERNAL_SERVER_ERROR, null, e.getMessage());
+
         }
+
 
         // 3. 회원 가입 성공
         return new ResponseForm<>(HttpStatus.OK, userCreateForm, "회원 가입이 성공적으로 완료되었습니다.");
@@ -130,7 +137,6 @@ public class UserController {
         }
     }
 
-
     // 유저 조회
     @GetMapping("/{username}")
     public ResponseForm<UserDTO> getUserByUsername(@PathVariable String username) {
@@ -180,8 +186,6 @@ public class UserController {
         return new ResponseForm<>(HttpStatus.OK, updatedProfile, "User profile deleted successfully");
     }
 
-
-
     // userProfile 조회
     @GetMapping("/{username}/profile")
     public ResponseForm<ProfileDTO> getUserProfile (@PathVariable String username) {
@@ -190,6 +194,7 @@ public class UserController {
     }
 
 
+    // 사용자 온도 증가
     @PostMapping("/temperature/increase/{targetUsername}")
     public ResponseForm<UserDTO> increaseUserTemperature(
             @RequestHeader("Authorization") String authorizationHeader,
@@ -207,6 +212,7 @@ public class UserController {
         }
     }
 
+    // 사용자 온도 감소
     @PostMapping("/temperature/decrease/{targetUsername}")
     public ResponseForm<UserDTO> decreaseUserTemperature(
             @RequestHeader("Authorization") String authorizationHeader,

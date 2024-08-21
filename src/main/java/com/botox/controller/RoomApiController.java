@@ -26,33 +26,29 @@ public class RoomApiController {
     private final RoomService roomService;
     private final TokenProvider tokenProvider;
 
-    // 게임 종류에 따른 방 목록 조회 기능
-    @GetMapping("/rooms/{roomContent}")
-    // RoomForm에 담고, ResponseForm에 담아 출력
-    public ResponseForm<List<RoomForm>> getAllRoomListApi(@PathVariable String roomContent){
+    @GetMapping("/rooms")
+    public ResponseForm<?> getRoom(@RequestParam(required = false) Long roomNum,
+                                   @RequestParam(required = false) String roomContent) {
         try {
-            // roomForms는 모든 Room 객체를 RoomForm 객체로 변환하여 저장할 리스트
-            List<RoomForm> roomForms = new ArrayList<>();
-
-            // roomContent를 받아 roomService에서 getAllRoomByContent를 수행해 List<Room> 타입의 변수 rooms에 넣음
-            List<Room> rooms = roomService.getAllRoomByContent(roomContent);
-
-            // rooms 리스트 안에 있는 room 객체들을 돌면서 형태를 roomForm -> convertRoomForm으로 바꿔줌
-            for (Room room : rooms){
-                // convertRoomForm 메서드를 호출하여 현재 Room 객체를 RoomForm 객체로 변환
+            if (roomNum != null) {
+                // 특정 roomNum에 대한 방 정보 조회
+                Room room = roomService.getRoomById(roomNum);
                 RoomForm roomForm = convertRoomForm(room);
-                // 변환된 RoomForm 객체를 roomForms 리스트에 추가
-                roomForms.add(roomForm);
+                return new ResponseForm<>(HttpStatus.OK, roomForm, "방 조회를 완료했습니다.");
+            } else if (roomContent != null) {
+                // 특정 roomContent에 대한 방 목록 조회
+                List<Room> rooms = roomService.getAllRoomByContent(roomContent);
+                List<RoomForm> roomForms = rooms.stream()
+                        .map(this::convertRoomForm)
+                        .collect(Collectors.toList());
+                return new ResponseForm<>(HttpStatus.OK, roomForms, "방 목록 조회를 완료했습니다.");
+            } else {
+                return new ResponseForm<>(HttpStatus.BAD_REQUEST, null, "roomNum 또는 roomContent를 제공해야 합니다.");
             }
-
-            // 변환된 RoomForm 리스트를 포함한 ResponseForm 객체를 반환
-            return new ResponseForm<>(HttpStatus.OK, roomForms, "OK");
         } catch (NotFoundRoomException e) {
-            // 방을 찾을 수 없을 때 NO_CONTENT 상태와 함께 메시지를 반환
-            return new ResponseForm<>(HttpStatus.NO_CONTENT, null, e.getMessage());
+            return new ResponseForm<>(HttpStatus.NOT_FOUND, null, e.getMessage());
         } catch (Exception e) {
-            // 기타 예기치 않은 오류 발생 시 INTERNAL_SERVER_ERROR 상태와 함께 메시지를 반환
-            log.info("error", e);
+            log.error("Unexpected error", e);
             return new ResponseForm<>(HttpStatus.INTERNAL_SERVER_ERROR, null, "예기치 않은 오류가 발생했습니다.");
         }
     }
@@ -131,15 +127,35 @@ public class RoomApiController {
     @PostMapping("/rooms/{roomNum}/join")
     public ResponseForm<Void> joinRoom(@PathVariable Long roomNum, @RequestBody JoinRoomForm joinRoomForm) {
         try {
-            roomService.joinRoom(roomNum, joinRoomForm.getUserId());
+            // 비밀번호를 포함하여 서비스 메서드 호출
+            roomService.joinRoom(roomNum, joinRoomForm.getUserId(), joinRoomForm.getPassword());
             return new ResponseForm<>(HttpStatus.NO_CONTENT, null, "방 입장을 완료했습니다.");
         } catch (NotFoundRoomException e) {
             return new ResponseForm<>(HttpStatus.NOT_FOUND, null, e.getMessage());
+        } catch (IllegalArgumentException e) {
+            return new ResponseForm<>(HttpStatus.UNAUTHORIZED, null, "잘못된 비밀번호입니다.");
         } catch (Exception e) {
             log.error("Unexpected error", e);
             return new ResponseForm<>(HttpStatus.INTERNAL_SERVER_ERROR, null, "예기치 않은 오류가 발생했습니다.");
         }
     }
+
+    // 빠른 방 입장 기능
+    @PostMapping("/rooms/{roomContent}/enter")
+    public ResponseForm<Void> enterRoom(@PathVariable String roomContent, @RequestBody EnterRoomForm enterRoomForm) {
+        try {
+            roomService.enterRoom(roomContent, enterRoomForm.getUserId());
+            return new ResponseForm<>(HttpStatus.NO_CONTENT, null, "빠른 방 입장을 완료했습니다.");
+        } catch (NotFoundRoomException e) {
+            return new ResponseForm<>(HttpStatus.NOT_FOUND, null, e.getMessage());
+        } catch (IllegalStateException e) {
+            return new ResponseForm<>(HttpStatus.NO_CONTENT, null, e.getMessage());
+        } catch (Exception e) {
+            log.error("빠른 Unexpected error", e);
+            return new ResponseForm<>(HttpStatus.INTERNAL_SERVER_ERROR, null, "빠른 예기치 않은 오류가 발생했습니다.");
+        }
+    }
+
 
     // 초대 링크 생성 기능
     @PostMapping("/rooms/{roomNum}/invite-link")
@@ -208,6 +224,38 @@ public class RoomApiController {
         }
     }
 
+    // 방 강퇴 기능
+    @PostMapping("/rooms/{roomNum}/kick")
+    public ResponseForm<Void> kickUser(@PathVariable Long roomNum, @RequestBody KickUserForm kickUserForm) {
+        try {
+            roomService.kickUser(roomNum, kickUserForm.getRoomMasterId(), kickUserForm.getUserIdToKick());
+            return new ResponseForm<>(HttpStatus.NO_CONTENT, null, "사용자를 강퇴했습니다.");
+        } catch (NotFoundRoomException e) {
+            return new ResponseForm<>(HttpStatus.NOT_FOUND, null, e.getMessage());
+        } catch (IllegalArgumentException e) {
+            return new ResponseForm<>(HttpStatus.UNAUTHORIZED, null, "강퇴 권한이 없습니다.");
+        } catch (Exception e) {
+            log.error("Unexpected error", e);
+            return new ResponseForm<>(HttpStatus.INTERNAL_SERVER_ERROR, null, "예기치 않은 오류가 발생했습니다.");
+        }
+    }
+
+    // 방장 권한 위임 기능
+    @PostMapping("/rooms/{roomNum}/transfer")
+    public ResponseForm<Void> transferRoomMaster(@PathVariable Long roomNum, @RequestBody TransferMasterForm transferMasterForm) {
+        try {
+            roomService.transferRoomMaster(roomNum, transferMasterForm.getCurrentMasterId(), transferMasterForm.getNewMasterId());
+            return new ResponseForm<>(HttpStatus.NO_CONTENT, null, "방장 권한을 성공적으로 위임했습니다.");
+        } catch (NotFoundRoomException e) {
+            return new ResponseForm<>(HttpStatus.NOT_FOUND, null, e.getMessage());
+        } catch (IllegalArgumentException e) {
+            return new ResponseForm<>(HttpStatus.UNAUTHORIZED, null, "권한이 없습니다.");
+        } catch (Exception e) {
+            log.error("Unexpected error", e);
+            return new ResponseForm<>(HttpStatus.INTERNAL_SERVER_ERROR, null, "예기치 않은 오류가 발생했습니다.");
+        }
+    }
+
 
     private RoomForm convertRoomForm(Room room) {
         return RoomForm.builder()
@@ -215,14 +263,20 @@ public class RoomApiController {
                 .roomTitle(room.getRoomTitle())
                 .roomContent(room.getRoomContent())
                 .roomType(room.getRoomType())
-                .gameName(room.getGameName())
+                .roomPassword(room.getRoomPassword())
                 .roomMasterId(room.getRoomMasterId() != null ? Long.valueOf(room.getRoomMasterId()) : null)
                 .roomStatus(room.getRoomStatus())
                 .roomCapacityLimit(room.getRoomCapacityLimit())
                 .roomUpdateTime(Timestamp.valueOf(room.getRoomUpdateTime()))
                 .roomCreateAt(Timestamp.valueOf(room.getRoomCreateAt()))
                 .roomUserCount(room.getRoomUserCount())
-                .participantIds(room.getParticipants().stream().map(User::getId).collect(Collectors.toList()))
+                //.participantIds(room.getParticipants().stream().map(User::getId).collect(Collectors.toList()))
+                //원래 room.getparticipantIds()가 List<user>가 아니라 List<RoomParticipant>를 반환하기 때문임
+                //그래서 User 객체의 ID를 직접 가져오려면 RoomParticipant 객체를 통해 접근해야 함
+                .participantIds(room.getParticipants().stream()
+                        .map(participant -> participant.getUser().getId())
+                        .collect(Collectors.toList()))
+
                 .build();
     }
 
@@ -233,8 +287,8 @@ public class RoomApiController {
         private Long roomNum;
         private String roomTitle;
         private String roomContent;
+        private String roomPassword;
         private RoomType roomType;
-        private String gameName;
         private Long roomMasterId;
         private RoomStatus roomStatus;
         private Integer roomCapacityLimit;
@@ -250,12 +304,37 @@ public class RoomApiController {
     @AllArgsConstructor
     public static class JoinRoomForm {
         private Long userId;
+        private String password;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class KickUserForm {
+        private Long roomMasterId;
+        private Long userIdToKick;
+    }
+
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class TransferMasterForm {
+        private Long currentMasterId;
+        private Long newMasterId;
     }
 
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
     public static class LeaveRoomForm {
+        private Long userId;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class EnterRoomForm {
         private Long userId;
     }
 }
