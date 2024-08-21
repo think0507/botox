@@ -5,7 +5,9 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "post")
@@ -43,6 +45,15 @@ public class Post {
 
     @Column(name = "image_url")
     private String imageUrl;
+
+    @ElementCollection
+    @CollectionTable(name = "post_liked_users", joinColumns = @JoinColumn(name = "post_id"))
+    @Column(name = "user_id")
+    private Set<Long> likedUserIds = new HashSet<>();
+
+    @OneToOne(mappedBy = "post")
+    private PopularPost popularPost;
+
     @PrePersist
     protected void onCreate() {
         date = LocalDateTime.now();

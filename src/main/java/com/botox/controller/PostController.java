@@ -1,18 +1,18 @@
 package com.botox.controller;
 
 import com.botox.constant.PostType;
+import com.botox.domain.PopularPost;
 import com.botox.domain.Post;
-import com.botox.service.PostService;
-import com.botox.service.ReportService;
-import com.botox.service.S3UploadService;
-import com.botox.service.UserService;
+import com.botox.service.*;
 import lombok.Data;
 import lombok.Builder;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
@@ -21,7 +21,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
-
+@Slf4j
 @RestController
 @RequestMapping("/api/posts")
 public class PostController {
@@ -34,6 +34,7 @@ public class PostController {
     private S3UploadService s3UploadService;
     @Autowired
     private UserService userService;
+
 
     @PostMapping("/upload")
     public ResponseForm<String> uploadImage(@RequestParam("file") MultipartFile file,
@@ -52,6 +53,7 @@ public class PostController {
             return new ResponseForm<>(HttpStatus.INTERNAL_SERVER_ERROR, null, "Error uploading image: " + e.getMessage());
         }
     }
+
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseForm<PostForm> createPost(
@@ -102,13 +104,15 @@ public class PostController {
     }
 
     @PutMapping("/{postId}")
-    public ResponseForm<PostForm> updatePost(@PathVariable Long postId, @RequestBody Post postDetails) {
+    public ResponseForm<PostForm> updatePost(@PathVariable Long postId, @RequestBody Post postDetails, @RequestParam Long userId) {
+        log.info("Received update request: postId={}, userId={}, postDetails={}", postId, userId, postDetails);
         try {
-            Post updatedPost = postService.updatePost(postId, postDetails);
+            Post updatedPost = postService.updatePost(postId, postDetails, userId);
             PostForm postForm = convertToPostForm(updatedPost);
             return new ResponseForm<>(HttpStatus.OK, postForm, "게시글이 성공적으로 수정되었습니다.");
         } catch (Exception e) {
-            return new ResponseForm<>(HttpStatus.INTERNAL_SERVER_ERROR, null, "Error updating post: " + e.getMessage());
+            log.error("Error updating post: ", e);
+            return new ResponseForm<>(HttpStatus.FORBIDDEN, null, e.getMessage());
         }
     }
 
@@ -140,7 +144,7 @@ public class PostController {
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size) {
         if(size > 50) size = 50;
-        Page<Post> posts = postService.getAllPosts(page, size, Sort.by("date").descending());
+        Page<Post> posts = postService.getAllPostsWithPopular(page, size, Sort.by("date").descending());
         List<PostForm> postForms = posts.getContent().stream()
                 .map(this::convertToPostForm)
                 .collect(Collectors.toList());
@@ -196,9 +200,9 @@ public class PostController {
     }
 
     @PostMapping("/{postId}/like")
-    public ResponseForm<Void> likePost(@PathVariable Long postId) {
+    public ResponseForm<Void> likePost(@PathVariable Long postId, @RequestParam Long userId) {
         try {
-            postService.likePost(postId);
+            postService.likePost(postId, userId);
             return new ResponseForm<>(HttpStatus.OK, null, "게시글에 좋아요를 눌렀습니다.");
         } catch (Exception e) {
             return new ResponseForm<>(HttpStatus.BAD_REQUEST, null, e.getMessage());
@@ -206,9 +210,9 @@ public class PostController {
     }
 
     @DeleteMapping("/{postId}/like")
-    public ResponseForm<Void> unlikePost(@PathVariable Long postId) {
+    public ResponseForm<Void> unlikePost(@PathVariable Long postId, @RequestParam Long userId) {
         try {
-            postService.unlikePost(postId);
+            postService.unlikePost(postId, userId);
             return new ResponseForm<>(HttpStatus.OK, null, "게시글 좋아요를 취소했습니다.");
         } catch (Exception e) {
             return new ResponseForm<>(HttpStatus.BAD_REQUEST, null, e.getMessage());

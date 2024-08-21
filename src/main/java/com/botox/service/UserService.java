@@ -294,4 +294,18 @@ public class UserService implements UserDetailsService {
         }
         return post.getUser().getId().equals(userId);  // 자신의 게시글만 삭제 가능
     }
+
+    @Transactional
+    public String uploadImage(MultipartFile file, Long userId, boolean isProfileImage) throws Exception {
+        String imageUrl = s3UploadService.uploadFile(file);
+
+        if (isProfileImage && userId != null) {
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new RuntimeException("User not found with id " + userId));
+            user.setUserProfilePic(imageUrl);
+            userRepository.save(user);
+        }
+
+        return imageUrl;
+    }
 }

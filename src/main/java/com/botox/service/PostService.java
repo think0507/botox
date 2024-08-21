@@ -1,5 +1,6 @@
 package com.botox.service;
 
+import com.botox.domain.PopularPost;
 import com.botox.domain.Post;
 import com.botox.domain.User;
 import com.botox.repository.PostRepository;
@@ -11,6 +12,8 @@ import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -26,20 +29,9 @@ public class PostService {
     private S3UploadService s3UploadService;
     @Autowired
     private UserService userService;
+    @Autowired
+    private PopularPostService popularPostService;
 
-    @Transactional
-    public String uploadImage(MultipartFile file, Long userId, boolean isProfileImage) throws Exception {
-        String imageUrl = s3UploadService.uploadFile(file);
-
-        if (isProfileImage && userId != null) {
-            User user = userRepository.findById(userId)
-                    .orElseThrow(() -> new RuntimeException("User not found with id " + userId));
-            user.setUserProfilePic(imageUrl);
-            userRepository.save(user);
-        }
-
-        return imageUrl;
-    }
 
     @Transactional
     public Post createPost(Post post, Long userId, MultipartFile file) {
@@ -55,17 +47,47 @@ public class PostService {
 
             return postRepository.save(post);
         } catch (Exception e) {
+            log.error("Error creating post: ", e);
             throw new RuntimeException("Failed to create post", e);
         }
     }
+
+    public Page<Post> getAllPostsWithPopular(int page, int size, Sort sort) {
+        Pageable pageable = PageRequest.of(page - 1, size, sort);
+        Page<Post> posts = postRepository.findAll(pageable);
+
+        if (page == 1) {
+            PopularPost popularPost = popularPostService.getPopularPostForToday();
+            if (popularPost != null) {
+                List<Post> content = new ArrayList<>();
+                content.add(popularPost.getPost());
+                content.addAll(posts.getContent());
+                return new PageImpl<>(content, pageable, posts.getTotalElements() + 1);
+            }
+        }
+
+        return posts;
+    }
+
 
     public Post getPost(Long postId) {
         return postRepository.findByIdWithUser(postId)
                 .orElseThrow(() -> new RuntimeException("Post not found with id " + postId));
     }
 
-    public Post updatePost(Long postId, Post postDetails) {
+    @Transactional
+    public Post updatePost(Long postId, Post postDetails, Long userId) {
+        log.info("Updating post: postId={}, userId={}", postId, userId);
         Post post = getPost(postId);
+        log.info("Found post: {}", post);
+        if (!post.getUser().getId().equals(userId)) {
+            log.warn("User {} is not authorized to update post {}", userId, postId);
+            throw new RuntimeException("You are not authorized to update this post");
+        }
+
+        if (!post.getUser().getId().equals(userId)) {
+            throw new RuntimeException("You are not authorized to update this post");
+        }
         post.setTitle(postDetails.getTitle());
         post.setContent(postDetails.getContent());
         post.setPostType(postDetails.getPostType());
@@ -79,11 +101,6 @@ public class PostService {
             throw new RuntimeException("You are not authorized to delete this post");
         }
         postRepository.delete(post);
-    }
-
-    public Page<Post> getAllPosts(int page, int size, Sort sort) {
-        Pageable pageable = PageRequest.of(page - 1, size, sort);
-        return postRepository.findAll(pageable);
     }
 
     public Page<Post> searchPostsByTitleInAllPosts(String title, Pageable pageable) {
@@ -100,23 +117,26 @@ public class PostService {
     }
 
     @Transactional
-    public void likePost(Long postId) {
+    public void likePost(Long postId, Long userId) {
         Post post = getPost(postId);
+        if (post.getLikedUserIds().contains(userId)) {
+            throw new RuntimeException("이미 이 게시글에 좋아요를 눌렀습니다.");
+        }
+        post.getLikedUserIds().add(userId);
         post.setLikesCount(post.getLikesCount() + 1);
         postRepository.save(post);
     }
 
     @Transactional
-    public void unlikePost(Long postId) {
+    public void unlikePost(Long postId, Long userId) {
         Post post = getPost(postId);
-        if (post.getLikesCount() > 0) {
-            post.setLikesCount(post.getLikesCount() - 1);
-            postRepository.save(post);
-        } else {
-            throw new RuntimeException("좋아요 수가 이미 0입니다.");
+        if (!post.getLikedUserIds().contains(userId)) {
+            throw new RuntimeException("좋아요를 누르지 않은 게시글입니다.");
         }
+        post.getLikedUserIds().remove(userId);
+        post.setLikesCount(post.getLikesCount() - 1);
+        postRepository.save(post);
     }
-
     public int getLikeCount(Long postId) {
         Post post = getPost(postId);
         return post.getLikesCount();
