@@ -1,5 +1,6 @@
 package com.botox.controller;
 
+import com.botox.config.jwt.TokenProvider;
 import com.botox.constant.RoomStatus;
 import com.botox.constant.RoomType;
 import com.botox.domain.Room;
@@ -23,34 +24,31 @@ import com.botox.domain.User;
 @Slf4j
 public class RoomApiController {
     private final RoomService roomService;
+    private final TokenProvider tokenProvider;
 
-    // 게임 종류에 따른 방 목록 조회 기능
-    @GetMapping("/rooms/{roomContent}")
-    // RoomForm에 담고, ResponseForm에 담아 출력
-    public ResponseForm<List<RoomForm>> getAllRoomListApi(@PathVariable String roomContent){
+    @GetMapping("/rooms")
+    public ResponseForm<?> getRoom(@RequestParam(required = false) Long roomNum,
+                                   @RequestParam(required = false) String roomContent) {
         try {
-            // roomForms는 모든 Room 객체를 RoomForm 객체로 변환하여 저장할 리스트
-            List<RoomForm> roomForms = new ArrayList<>();
-
-            // roomContent를 받아 roomService에서 getAllRoomByContent를 수행해 List<Room> 타입의 변수 rooms에 넣음
-            List<Room> rooms = roomService.getAllRoomByContent(roomContent);
-
-            // rooms 리스트 안에 있는 room 객체들을 돌면서 형태를 roomForm -> convertRoomForm으로 바꿔줌
-            for (Room room : rooms){
-                // convertRoomForm 메서드를 호출하여 현재 Room 객체를 RoomForm 객체로 변환
+            if (roomNum != null) {
+                // 특정 roomNum에 대한 방 정보 조회
+                Room room = roomService.getRoomById(roomNum);
                 RoomForm roomForm = convertRoomForm(room);
-                // 변환된 RoomForm 객체를 roomForms 리스트에 추가
-                roomForms.add(roomForm);
+                return new ResponseForm<>(HttpStatus.OK, roomForm, "방 조회를 완료했습니다.");
+            } else if (roomContent != null) {
+                // 특정 roomContent에 대한 방 목록 조회
+                List<Room> rooms = roomService.getAllRoomByContent(roomContent);
+                List<RoomForm> roomForms = rooms.stream()
+                        .map(this::convertRoomForm)
+                        .collect(Collectors.toList());
+                return new ResponseForm<>(HttpStatus.OK, roomForms, "방 목록 조회를 완료했습니다.");
+            } else {
+                return new ResponseForm<>(HttpStatus.BAD_REQUEST, null, "roomNum 또는 roomContent를 제공해야 합니다.");
             }
-
-            // 변환된 RoomForm 리스트를 포함한 ResponseForm 객체를 반환
-            return new ResponseForm<>(HttpStatus.OK, roomForms, "OK");
         } catch (NotFoundRoomException e) {
-            // 방을 찾을 수 없을 때 NO_CONTENT 상태와 함께 메시지를 반환
-            return new ResponseForm<>(HttpStatus.NO_CONTENT, null, e.getMessage());
+            return new ResponseForm<>(HttpStatus.NOT_FOUND, null, e.getMessage());
         } catch (Exception e) {
-            // 기타 예기치 않은 오류 발생 시 INTERNAL_SERVER_ERROR 상태와 함께 메시지를 반환
-            log.info("error", e);
+            log.error("Unexpected error", e);
             return new ResponseForm<>(HttpStatus.INTERNAL_SERVER_ERROR, null, "예기치 않은 오류가 발생했습니다.");
         }
     }
@@ -155,6 +153,59 @@ public class RoomApiController {
         } catch (Exception e) {
             log.error("빠른 Unexpected error", e);
             return new ResponseForm<>(HttpStatus.INTERNAL_SERVER_ERROR, null, "빠른 예기치 않은 오류가 발생했습니다.");
+        }
+    }
+
+
+    // 초대 링크 생성 기능
+    @PostMapping("/rooms/{roomNum}/invite-link")
+    public ResponseForm<String> generateInviteLink(@PathVariable Long roomNum) {
+        try {
+            String inviteLink = roomService.generateInviteLink(roomNum);
+            return new ResponseForm<>(HttpStatus.OK, inviteLink, "초대 링크 생성 완료");
+        } catch (NotFoundRoomException e) {
+            return new ResponseForm<>(HttpStatus.NOT_FOUND, null, e.getMessage());
+        } catch (Exception e) {
+            log.error("Unexpected error", e);
+            return new ResponseForm<>(HttpStatus.INTERNAL_SERVER_ERROR, null, "초대 링크 생성 중 오류가 발생했습니다.");
+        }
+    }
+
+
+    // 게스트로 방 입장 기능
+    @PostMapping("/rooms/guest-join/{inviteCode}")
+    public ResponseForm<String> joinRoomAsGuest(@PathVariable String inviteCode) {
+        try {
+            String guestToken = roomService.joinRoomAsGuest(inviteCode);
+            return new ResponseForm<>(HttpStatus.OK, guestToken, "게스트로 방에 입장했습니다.");
+        } catch (NotFoundRoomException e) {
+            return new ResponseForm<>(HttpStatus.NOT_FOUND, null, e.getMessage());
+        } catch (IllegalStateException e) {
+            return new ResponseForm<>(HttpStatus.BAD_REQUEST, null, e.getMessage());
+        } catch (Exception e) {
+            return new ResponseForm<>(HttpStatus.INTERNAL_SERVER_ERROR, null, "방 입장 중 오류가 발생했습니다.");
+        }
+    }
+
+    // 게스트 방 퇴장 기능
+    @PostMapping("/rooms/guest-leave")
+    public ResponseForm<Void> leaveRoomAsGuest(@RequestHeader("Authorization") String token) {
+        try {
+            // "Bearer " 접두사를 제거하여 실제 토큰 값만 추출
+            String tokenValue = token.startsWith("Bearer ") ? token.substring(7) : token;
+
+            if (!tokenProvider.validateToken(tokenValue)) {
+                return new ResponseForm<>(HttpStatus.UNAUTHORIZED, null, "유효하지 않은 토큰입니다.");
+            }
+
+            Long roomNum = tokenProvider.getRoomNumFromGuestToken(tokenValue);
+            roomService.removeGuestFromRoom(roomNum, tokenValue);
+
+            return new ResponseForm<>(HttpStatus.OK, null, "게스트가 방에서 나갔습니다.");
+        } catch (NotFoundRoomException e) {
+            return new ResponseForm<>(HttpStatus.NOT_FOUND, null, e.getMessage());
+        } catch (Exception e) {
+            return new ResponseForm<>(HttpStatus.INTERNAL_SERVER_ERROR, null, "방 퇴장 중 오류가 발생했습니다.");
         }
     }
 

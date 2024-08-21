@@ -41,6 +41,8 @@ dependencies {
 	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5' // JWT with Jackson support
 	implementation 'org.springframework.boot:spring-boot-starter-data-redis' // Redis dependency
 	implementation 'org.springframework.session:spring-session-data-redis' // Spring Session Redis dependency
+	implementation 'org.springframework.boot:spring-boot-starter-cache'
+	implementation 'org.redisson:redisson:3.34.1'
 	compileOnly 'org.projectlombok:lombok'
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
 	runtimeOnly 'com.h2database:h2'
@@ -53,6 +55,14 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-websocket'
 	implementation 'org.kurento:kurento-client:6.14.0'
 	implementation 'com.google.code.gson:gson:2.8.9'
+
+	implementation 'org.springframework.cloud:spring-cloud-starter-aws:2.2.6.RELEASE'
+	implementation 'org.springframework.cloud:spring-cloud-aws-context:2.2.6.RELEASE'
+	implementation platform('com.amazonaws:aws-java-sdk-bom:1.11.1000')
+	implementation 'com.amazonaws:aws-java-sdk-s3'
+
+	implementation 'com.corundumstudio.socketio:netty-socketio:2.0.3'
+	implementation 'org.webjars:stomp-websocket:2.3.4'
 }
 
 tasks.named('test') {

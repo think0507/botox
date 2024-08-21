@@ -1,11 +1,17 @@
 package com.botox.controller;
 
+import com.botox.config.jwt.TokenProvider;
+import com.botox.constant.UserStatus;
 import com.botox.domain.ProfileDTO;
 import com.botox.domain.User;
 import com.botox.domain.*;
+import com.botox.exception.UnauthorizedException;
 import com.botox.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import lombok.RequiredArgsConstructor;
@@ -13,7 +19,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -24,6 +32,7 @@ public class UserController {
 
     private final UserService userService;
     private final PasswordEncoder passwordEncoder;
+    private final TokenProvider tokenProvider;
 
     @PostMapping("/signup")
     public ResponseForm<UserCreateForm> createUser(
@@ -87,7 +96,7 @@ public class UserController {
     }
 
     @PostMapping("/logout")
-    public ResponseForm<String> logout (@RequestBody Map < String, String > request){
+    public ResponseForm<String> logout(@RequestBody Map<String, String> request) {
         String username = request.get("username");
         try {
             userService.logout(username);
@@ -100,7 +109,7 @@ public class UserController {
     }
 
     @PostMapping("/refresh")
-    public ResponseForm<LoginResponseDTO> refreshAccessToken (@RequestBody Map < String, String > request){
+    public ResponseForm<LoginResponseDTO> refreshAccessToken(@RequestBody Map<String, String> request) {
         String username = request.get("username");
         String refreshToken = request.get("refreshToken");
         try {
@@ -128,7 +137,6 @@ public class UserController {
         }
     }
 
-
     // 유저 조회
     @GetMapping("/{username}")
     public ResponseForm<UserDTO> getUserByUsername(@PathVariable String username) {
@@ -144,28 +152,82 @@ public class UserController {
     }
 
     // userProfile 수정 또는 생성
-    @PatchMapping("/{username}/profile")
+    @PutMapping("/{username}/profile")
     public ResponseForm<ProfileDTO> updateUserProfile(
             @PathVariable String username,
             @RequestBody Map<String, String> updates) {
-        String userProfile = updates.get("userProfile");
-        String userProfilePic = updates.get("userProfilePic");
-        String userNickname = updates.get("userNickname");
-        ProfileDTO updatedProfile = userService.updateUserProfile(username, userProfile, userProfilePic,userNickname);
-        return new ResponseForm<>(HttpStatus.OK, updatedProfile, "User profile updated successfully");
+        try {
+            String userProfile = updates.get("userProfile");
+            String userProfilePic = updates.get("userProfilePic");
+            String userNickname = updates.get("userNickname");
+            ProfileDTO updatedProfile = userService.updateUserProfile(username, userProfile, userProfilePic, userNickname);
+            return new ResponseForm<>(HttpStatus.OK, updatedProfile, "User profile updated successfully");
+        } catch (Exception e) {
+            return new ResponseForm<>(HttpStatus.BAD_REQUEST, null, "Failed to update profile: " + e.getMessage());
+        }
     }
 
+    @PostMapping("/upload")
+    public ResponseForm uploadImage(@RequestParam("file") MultipartFile file,
+                                    @RequestParam(value = "userId", required = false) Long userId,
+                                    @RequestParam(value = "isProfileImage", defaultValue = "false") boolean isProfileImage) {
+        try {
+            String imageUrl = userService.uploadImage(file, userId, isProfileImage);
+            String message = isProfileImage ? "프로필 이미지가 성공적으로 업로드되었습니다." : "이미지가 성공적으로 업로드되었습니다.";
+            return new ResponseForm<>(HttpStatus.OK, imageUrl, message);
+        } catch (Exception e) {
+            return new ResponseForm<>(HttpStatus.INTERNAL_SERVER_ERROR, null, "Error uploading image: " + e.getMessage());
+        }
+    }
     // userProfile 삭제
     @DeleteMapping("/{username}/profile")
     public ResponseForm<ProfileDTO> deleteUserProfile(@PathVariable String username) {
         ProfileDTO updatedProfile = userService.deleteUserProfile(username);
         return new ResponseForm<>(HttpStatus.OK, updatedProfile, "User profile deleted successfully");
     }
+
     // userProfile 조회
     @GetMapping("/{username}/profile")
     public ResponseForm<ProfileDTO> getUserProfile (@PathVariable String username) {
         ProfileDTO userProfile = userService.getUserProfile(username);
         return new ResponseForm<>(HttpStatus.OK, userProfile, "User profile retrieved successfully");
+    }
+
+
+    // 사용자 온도 증가
+    @PostMapping("/temperature/increase/{targetUsername}")
+    public ResponseForm<UserDTO> increaseUserTemperature(
+            @RequestHeader("Authorization") String authorizationHeader,
+            @PathVariable String targetUsername) {
+        try {
+            String token = authorizationHeader.replace("Bearer ", "");
+            UserDTO updatedUser = userService.increaseUserTemperature(token, targetUsername);
+            return new ResponseForm<>(HttpStatus.OK, updatedUser, targetUsername + "의 온도가 1 상승했습니다.");
+        } catch (UnauthorizedException e) {
+            return new ResponseForm<>(HttpStatus.UNAUTHORIZED, null, e.getMessage());
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            return new ResponseForm<>(HttpStatus.BAD_REQUEST, null, e.getMessage());
+        } catch (RuntimeException e) {
+            return new ResponseForm<>(HttpStatus.INTERNAL_SERVER_ERROR, null, e.getMessage());
+        }
+    }
+
+    // 사용자 온도 감소
+    @PostMapping("/temperature/decrease/{targetUsername}")
+    public ResponseForm<UserDTO> decreaseUserTemperature(
+            @RequestHeader("Authorization") String authorizationHeader,
+            @PathVariable String targetUsername) {
+        try {
+            String token = authorizationHeader.replace("Bearer ", "");
+            UserDTO updatedUser = userService.decreaseUserTemperature(token, targetUsername);
+            return new ResponseForm<>(HttpStatus.OK, updatedUser, targetUsername + "의 온도가 1 하락했습니다.");
+        } catch (UnauthorizedException e) {
+            return new ResponseForm<>(HttpStatus.UNAUTHORIZED, null, e.getMessage());
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            return new ResponseForm<>(HttpStatus.BAD_REQUEST, null, e.getMessage());
+        } catch (RuntimeException e) {
+            return new ResponseForm<>(HttpStatus.INTERNAL_SERVER_ERROR, null, e.getMessage());
+        }
     }
 }
 

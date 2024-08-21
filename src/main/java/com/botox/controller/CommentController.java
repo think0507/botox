@@ -1,21 +1,29 @@
 package com.botox.controller;
 
+import com.botox.constant.UserRole;
 import com.botox.domain.Comment;
 import com.botox.domain.Report;
 import com.botox.constant.ReportType;
+import com.botox.domain.User;
 import com.botox.exception.NotFoundCommentException;
 import com.botox.service.CommentService;
 import com.botox.service.CommentReportService;
+import com.botox.service.UserService;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -24,6 +32,14 @@ import java.util.List;
 public class CommentController {
     private final CommentService commentService;
     private final CommentReportService commentReportService;
+    private final UserService userService;
+
+    @Autowired
+    public CommentController(UserService userService, CommentService commentService, CommentReportService commentReportService){
+        this.commentService=commentService;
+        this.userService=userService;
+        this.commentReportService = commentReportService;
+    }
 
     //댓글 등록 메서드
     @PostMapping("/comments")
@@ -75,6 +91,27 @@ public class CommentController {
     @DeleteMapping("/comments/{commentId}")
     public ResponseForm<Void> deleteComment(@PathVariable Long commentId) {
         try {
+            //현재 인증된 사용자를 가져옴
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String currentUsername = authentication.getName();
+
+            //현재 사용자를 데이터베이스에서 조회
+            User currentUser = userService.findByUsername(currentUsername)
+                    .orElseThrow(()->new UsernameNotFoundException("유저를 찾을 수 없습니다."));
+
+            //댓글을 데이터베이스에서 조회
+            Comment comment = commentService.findById(commentId)
+                    .orElseThrow(()->new NotFoundCommentException("댓글을 찾을 수 없습니다."));
+
+            //댓글 작성자와 현재 사용자가 일치하는지 확인
+            if(!comment.getAuthor().getUsername().equals(currentUsername)) {
+                //현재 사용자가 ADMIN 권한을 가지고 있는지 조회
+                if (currentUser.getRole() != UserRole.ADMIN) {
+                    return new ResponseForm<>(HttpStatus.FORBIDDEN, null, "댓글 삭제 권한이 없습니다.");
+                }
+            }
+
+
             // CommentService를 사용하여 댓글을 삭제합니다.
             commentService.deleteComment(commentId);
             // 삭제가 성공적으로 이루어진 경우 NO_CONTENT 상태 코드와 함께 메시지를 반환합니다.
@@ -109,11 +146,12 @@ public class CommentController {
 
     //댓글 좋아요 기능 구현
     @PostMapping("/comments/{commentId}/like")
-    public ResponseForm<CommentForm> likeComment(@PathVariable Long commentId) {
+    public ResponseForm<CommentForm> likeComment(@PathVariable Long commentId, @RequestBody Map<String, Long> requestBody) {
+        Long userId = requestBody.get("userId");
         try {
 
             // CommentService를 사용하여 댓글에 좋아요를 추가합니다.
-            Comment comment = commentService.likeComment(commentId);
+            Comment comment = commentService.likeComment(commentId,userId);
             // 좋아요가 추가된 댓글을 CommentForm 객체로 변환합니다.
             CommentForm likedCommentForm = convertToCommentForm(comment);
             // 변환된 CommentForm 객체를 ResponseForm에 담아 클라이언트에게 HTTP 상태 코드와 함께 응답합니다.
@@ -145,11 +183,12 @@ public class CommentController {
     @Builder
     @AllArgsConstructor
     public static class CommentForm {
-        private Long authorId;
-        private Long postId;
-        private String commentContent;
-        private Integer likesCount;
-        private Long commentId;
+        private Long userId; //새로 추가한 좋아요를 누른 유저의 ID
+        private Long authorId; // 댓글 작성자
+        private Long postId; //게시글의 ID
+        private String commentContent; //댓글 내용
+        private Integer likesCount; // 댓글의 좋아요 수
+        private Long commentId; //댓글의 ID
     }
 
     @Data

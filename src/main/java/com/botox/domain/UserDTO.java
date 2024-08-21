@@ -1,5 +1,6 @@
 package com.botox.domain;
 
+import com.botox.constant.UserRole;
 import com.botox.constant.UserStatus;
 import lombok.Data;
 
@@ -12,4 +13,7 @@ public class UserDTO {
     private Integer userTemperatureLevel=0;
     private String userNickname;
     private UserStatus status;
+    private UserRole userRole;
+
+
 }
