@@ -21,6 +21,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.Duration;
 import java.time.LocalDate;
@@ -40,8 +41,11 @@ public class UserService implements UserDetailsService {
     private final TokenProvider tokenProvider;
     private final PasswordEncoder passwordEncoder;
     private final RedisTemplate<String, Object> redisTemplate;
+
+    private final S3UploadService s3UploadService;
     private final RedissonClient redissonClient;
     private final PostRepository postRepository;
+
 
     public UserCreateForm createUser(UserCreateForm userCreateForm) {
         User newUser = new User();
@@ -170,12 +174,16 @@ public class UserService implements UserDetailsService {
         return userRepository.findByUsername(username).map(this::convertToDTO);
     }
 
+
+
     // 유저 삭제
     @CacheEvict(value = "userName", key = "#username")
     @Transactional
     public void deleteUser(String username) {
         userRepository.deleteByUsername(username);
     }
+
+
 
     // 유저 프로필 조회
     @Cacheable(value = "userProfiles", key = "#username", unless = "#result == null")
@@ -185,20 +193,40 @@ public class UserService implements UserDetailsService {
         return new ProfileDTO(username, user.getUserNickname(), user.getUserProfile(), user.getUserProfilePic());
     }
 
+
+    @Transactional
+    public ProfileDTO updateUserProfile(String username, String userProfile, String userNickname, String nickname) {
+        User user = userRepository.findByUsername(username).orElseThrow(() -> new RuntimeException("User not found"));
     // 유저 프로필 수정
     @CacheEvict(value = "userProfiles", key = "#username")
     public ProfileDTO updateUserProfile(String username, String userProfile, String userProfilePic, String userNickname) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         user.setUserProfile(userProfile);
-        user.setUserProfilePic(userProfilePic);
         user.setUserNickname(userNickname);
         User updatedUser = userRepository.save(user);
         return convertToProfileDTO(updatedUser);
     }
 
+
+    @Transactional
+    public ProfileDTO updateProfileImage(String username, MultipartFile file) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        try {
+            String imageUrl = s3UploadService.uploadFile(file);
+            user.setUserProfilePic(imageUrl);
+            User updatedUser = userRepository.save(user);
+            return convertToProfileDTO(updatedUser);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to update profile image", e);
+        }
+    }
+
+
     // 유저 프로필 삭제
     @CacheEvict(value = "userProfiles", key = "#username")
+
     public ProfileDTO deleteUserProfile(String username) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -208,7 +236,6 @@ public class UserService implements UserDetailsService {
         return convertToProfileDTO(updatedUser);
     }
 
-    // User -> ProfileDTO 변환 메서드
     private ProfileDTO convertToProfileDTO(User user) {
         ProfileDTO profileDTO = new ProfileDTO();
         profileDTO.setUsername(user.getUsername());
@@ -304,5 +331,32 @@ public class UserService implements UserDetailsService {
             }
         }
         return null;
+    }
+
+    public boolean isAdmin(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        return user.getRole() == UserRole.ADMIN;
+    }
+
+    public boolean canDeletePost(Long userId, Post post) {
+        if (isAdmin(userId)) {
+            return true;  // 관리자는 모든 게시글 삭제 가능
+        }
+        return post.getUser().getId().equals(userId);  // 자신의 게시글만 삭제 가능
+    }
+
+    @Transactional
+    public String uploadImage(MultipartFile file, Long userId, boolean isProfileImage) throws Exception {
+        String imageUrl = s3UploadService.uploadFile(file);
+
+        if (isProfileImage && userId != null) {
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new RuntimeException("User not found with id " + userId));
+            user.setUserProfilePic(imageUrl);
+            userRepository.save(user);
+        }
+
+        return imageUrl;
     }
 }

@@ -19,6 +19,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Map;
@@ -151,17 +152,33 @@ public class UserController {
     }
 
     // userProfile 수정 또는 생성
-    @PatchMapping("/{username}/profile")
+    @PutMapping("/{username}/profile")
     public ResponseForm<ProfileDTO> updateUserProfile(
             @PathVariable String username,
             @RequestBody Map<String, String> updates) {
-        String userProfile = updates.get("userProfile");
-        String userProfilePic = updates.get("userProfilePic");
-        String userNickname = updates.get("userNickname");
-        ProfileDTO updatedProfile = userService.updateUserProfile(username, userProfile, userProfilePic, userNickname);
-        return new ResponseForm<>(HttpStatus.OK, updatedProfile, "User profile updated successfully");
+        try {
+            String userProfile = updates.get("userProfile");
+            String userProfilePic = updates.get("userProfilePic");
+            String userNickname = updates.get("userNickname");
+            ProfileDTO updatedProfile = userService.updateUserProfile(username, userProfile, userProfilePic, userNickname);
+            return new ResponseForm<>(HttpStatus.OK, updatedProfile, "User profile updated successfully");
+        } catch (Exception e) {
+            return new ResponseForm<>(HttpStatus.BAD_REQUEST, null, "Failed to update profile: " + e.getMessage());
+        }
     }
 
+    @PostMapping("/upload")
+    public ResponseForm uploadImage(@RequestParam("file") MultipartFile file,
+                                    @RequestParam(value = "userId", required = false) Long userId,
+                                    @RequestParam(value = "isProfileImage", defaultValue = "false") boolean isProfileImage) {
+        try {
+            String imageUrl = userService.uploadImage(file, userId, isProfileImage);
+            String message = isProfileImage ? "프로필 이미지가 성공적으로 업로드되었습니다." : "이미지가 성공적으로 업로드되었습니다.";
+            return new ResponseForm<>(HttpStatus.OK, imageUrl, message);
+        } catch (Exception e) {
+            return new ResponseForm<>(HttpStatus.INTERNAL_SERVER_ERROR, null, "Error uploading image: " + e.getMessage());
+        }
+    }
     // userProfile 삭제
     @DeleteMapping("/{username}/profile")
     public ResponseForm<ProfileDTO> deleteUserProfile(@PathVariable String username) {
