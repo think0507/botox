@@ -12,6 +12,8 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Random;
 
 @Slf4j
 @Service
@@ -26,23 +28,32 @@ public class PopularPostService {
     @Transactional
     @Scheduled(cron = "26 3 * * * ?")
     public void selectPopularPost() {
-        log.debug("Starting popular post selection at {}", LocalDateTime.now());
+        log.info("Starting popular post selection at {}", LocalDateTime.now());
 
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime cutoffTime = now.withHour(3).withMinute(26).withSecond(0);
         LocalDateTime startOfPeriod = cutoffTime.minusDays(1);
 
-        Post mostLikedPost = postRepository.findTopByDateBetweenOrderByLikesCountDesc(startOfPeriod, cutoffTime)
-                .orElse(null);
+        log.info("Searching for posts between {} and {}", startOfPeriod, cutoffTime);
 
-        if (mostLikedPost != null) {
+        List<Post> mostLikedPosts = postRepository.findTopPostsByLikesCountForDate(startOfPeriod, cutoffTime);
+
+        if (!mostLikedPosts.isEmpty()) {
+            // 동률인 경우 랜덤으로 선택
+            Post selectedPost = mostLikedPosts.get(new Random().nextInt(mostLikedPosts.size()));
+
+            log.info("Selected popular post: id={}, title={}, likes={}",
+                    selectedPost.getPostId(), selectedPost.getTitle(), selectedPost.getLikesCount());
+
             PopularPost popularPost = new PopularPost();
-            popularPost.setPost(mostLikedPost);
+            popularPost.setPost(selectedPost);
             popularPost.setSelectedDate(LocalDate.now());
-            popularPost.setLikesCount(mostLikedPost.getLikesCount());
+            popularPost.setLikesCount(selectedPost.getLikesCount());
 
             popularPostRepository.save(popularPost);
-            log.debug("Finished popular post selection");
+            log.info("Saved popular post for date: {}", LocalDate.now());
+        } else {
+            log.info("No posts found for the given period");
         }
     }
 

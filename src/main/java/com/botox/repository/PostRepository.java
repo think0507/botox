@@ -15,7 +15,9 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     @Query("SELECT p FROM Post p LEFT JOIN FETCH p.user WHERE p.postId = :id")
     Optional<Post> findByIdWithUser(@Param("id") Long id);
 
-    Optional<Post> findTopByDateBetweenOrderByLikesCountDesc(LocalDateTime start, LocalDateTime end);
+    @Query("SELECT p FROM Post p WHERE p.date BETWEEN :start AND :end AND p.likesCount = " +
+            "(SELECT MAX(p2.likesCount) FROM Post p2 WHERE p2.date BETWEEN :start AND :end)")
+    List<Post> findTopPostsByLikesCountForDate(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 
 
 }
