@@ -35,6 +35,13 @@ public class CommentReportService {
             Comment reportedComment = commentRepository.findById(reportForm.getReportedContentId())
                     .orElseThrow(() -> new NotFoundCommentException("Reported comment not found"));
 
+
+            // 예를 들어, 로그를 남길 수 있습니다.
+            log.info("Comment with ID {} reported by user {} against user {}",
+                    reportedComment.getCommentId(), reportingUser.getId(), reportedUser.getId());
+
+
+
             Report report = Report.builder()
                     .reportTime(LocalDateTime.now())
                     .reportingUser(reportingUser)
