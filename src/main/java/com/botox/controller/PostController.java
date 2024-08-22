@@ -129,17 +129,6 @@ public class PostController {
     public ResponseForm<ReportResponse.ReportData> reportPost(@PathVariable Long postId, @RequestBody ReportRequest reportRequest, HttpServletRequest request) {
         try {
             ReportResponse response = reportService.reportPost(reportRequest);
-            PostLogger.logPostReport(
-                    "POST_REPORT",
-                    "REPORT",
-                    postId.toString(),
-                    reportRequest.getReportingUserId().toString(),
-                    reportRequest.getReportingUserNickname(),
-                    reportRequest.getReportedUserId().toString(),
-                    reportRequest.getReportedUserNickname(),
-                    reportRequest.getReasonForReport(),
-                    request
-            );
             return new ResponseForm<>(HttpStatus.OK, response.getData(), "게시글 신고가 성공적으로 접수되었습니다.");
         } catch (Exception e) {
             return new ResponseForm<>(HttpStatus.INTERNAL_SERVER_ERROR, null, "An error occurred: " + e.getMessage());

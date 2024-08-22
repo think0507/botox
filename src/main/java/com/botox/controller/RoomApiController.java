@@ -118,34 +118,24 @@ public class RoomApiController {
     public ResponseForm<Void> leaveRoom(@PathVariable Long roomNum, @RequestBody LeaveRoomForm leaveRoomForm, HttpServletRequest request) {
         try {
             roomService.leaveRoom(roomNum, leaveRoomForm.getUserId());
-            RoomLogger.RoomLog("leave", roomNum, null, leaveRoomForm.getUserId(), request);
             return new ResponseForm<>(HttpStatus.NO_CONTENT, null, "방 나가기를 완료했습니다.");
         } catch (NotFoundRoomException e) {
-            RoomLogger.RoomLog("leave", roomNum, null, leaveRoomForm.getUserId(), request);
             return new ResponseForm<>(HttpStatus.NOT_FOUND, null, e.getMessage());
         } catch (Exception e) {
-            RoomLogger.RoomLog("leave", roomNum, null, leaveRoomForm.getUserId(), request);
             return new ResponseForm<>(HttpStatus.INTERNAL_SERVER_ERROR, null, "예기치 않은 오류가 발생했습니다.");
         }
     }
 
-
-
-    // 방 입장 기능
     @PostMapping("/rooms/{roomNum}/join")
     public ResponseForm<Void> joinRoom(@PathVariable Long roomNum, @RequestBody JoinRoomForm joinRoomForm, HttpServletRequest request) {
         try {
             roomService.joinRoom(roomNum, joinRoomForm.getUserId(), joinRoomForm.getPassword());
-            RoomLogger.RoomLog("join", roomNum, null, joinRoomForm.getUserId(), request);
             return new ResponseForm<>(HttpStatus.NO_CONTENT, null, "방 입장을 완료했습니다.");
         } catch (NotFoundRoomException e) {
-            RoomLogger.RoomLog("join", roomNum, null, joinRoomForm.getUserId(), request);
             return new ResponseForm<>(HttpStatus.NOT_FOUND, null, e.getMessage());
         } catch (IllegalArgumentException e) {
-            RoomLogger.RoomLog("join", roomNum, null, joinRoomForm.getUserId(), request);
             return new ResponseForm<>(HttpStatus.UNAUTHORIZED, null, "잘못된 비밀번호입니다.");
         } catch (Exception e) {
-            RoomLogger.RoomLog("join", roomNum, null, joinRoomForm.getUserId(), request);
             return new ResponseForm<>(HttpStatus.INTERNAL_SERVER_ERROR, null, "예기치 않은 오류가 발생했습니다.");
         }
     }

@@ -96,18 +96,6 @@ public class CommentController {
     public ResponseForm<ReportForm> reportComment(@PathVariable Long commentId, @RequestBody ReportForm reportForm, HttpServletRequest request) {
         try {
             ReportForm reportedForm = commentReportService.reportComment(reportForm);
-            CommentLogger.logCommentReport(
-                    "COMMENT_REPORT",
-                    "REPORT",
-                    commentId.toString(),
-                    reportForm.getReportedContentId().toString(),
-                    reportForm.getReportingUserId().toString(),
-                    reportForm.getReportingUserNickname(),
-                    reportForm.getReportedUserId().toString(),
-                    reportForm.getReportedUserNickname(),
-                    reportForm.getReasonForReport(),
-                    request
-            );
             return new ResponseForm<>(HttpStatus.OK, reportedForm, "댓글 신고가 성공적으로 접수되었습니다.");
         } catch (Exception e) {
             return new ResponseForm<>(HttpStatus.INTERNAL_SERVER_ERROR, null, "An error occurred: " + e.getMessage());
