@@ -3,6 +3,10 @@ package com.botox.controller;
 import com.botox.constant.PostType;
 import com.botox.domain.PopularPost;
 import com.botox.domain.Post;
+import com.botox.logger.PostLogger;
+import com.botox.service.PostService;
+import com.botox.service.ReportService;
+import jakarta.servlet.http.HttpServletRequest;
 import com.botox.service.*;
 import lombok.Data;
 import lombok.Builder;
@@ -24,6 +28,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @RestController
 @RequestMapping("/api/posts")
+@Slf4j
 public class PostController {
 
     @Autowired
@@ -183,15 +188,10 @@ public class PostController {
         return new ResponseForm<>(HttpStatus.OK, pagedResponse, "OK");
     }
 
+    // 게시글 신고
     @PostMapping("/{postId}/report")
-    public ResponseForm<ReportResponse.ReportData> reportPost(@PathVariable Long postId, @RequestBody ReportRequest reportRequest) {
+    public ResponseForm<ReportResponse.ReportData> reportPost(@PathVariable Long postId, @RequestBody ReportRequest reportRequest, HttpServletRequest request) {
         try {
-            Post post = postService.getPost(postId);
-            if (post.getUser() == null) {
-                return new ResponseForm<>(HttpStatus.BAD_REQUEST, null, "Post with id " + postId + " has no associated user");
-            }
-            reportRequest.setReportedPostId(postId);
-            reportRequest.setReportedUserId(post.getUser().getId());
             ReportResponse response = reportService.reportPost(reportRequest);
             return new ResponseForm<>(HttpStatus.OK, response.getData(), "게시글 신고가 성공적으로 접수되었습니다.");
         } catch (Exception e) {
