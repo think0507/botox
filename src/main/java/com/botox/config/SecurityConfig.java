@@ -36,7 +36,10 @@ public class SecurityConfig {
                                 "/api/users/signup",
                                 "/api/users/login",
                                 "/api/users/refresh",
-                                "/api/users/logout").permitAll()
+                                "/api/users/logout",
+                                "/api/rooms/guest-join/**", // 게스트 방 입장
+                                "/ws/**" // WebSocket 엔드포인트 허용
+                        ).permitAll()
                         .anyRequest().authenticated()
                 )
                 .csrf(AbstractHttpConfigurer::disable)
@@ -53,13 +56,11 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-
         configuration.setAllowedOrigins(List.of(
                 "http://d3ao949apmj1lo.cloudfront.net",
                 "https://botox-chat.site",
                 "https://www.botox-chat.site",
                 "http://localhost:3000")); // 여러 도메인을 한 번에 설정
-
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
@@ -80,6 +81,8 @@ public class SecurityConfig {
                 "/api/users/signup",
                 "/api/users/login",
                 "/api/users/refresh",
-                "/api/users/logout"));
+                "/api/users/logout",
+                "/api/rooms/guest-join/**" // 게스트 방 입장
+        ));
     }
 }
