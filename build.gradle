@@ -12,7 +12,7 @@ java {
 		languageVersion = JavaLanguageVersion.of(17)
 	}
 }
-// 기본 jar 태스크를 비활성화하여 plain JAR 파일이 생성되지 않도록 설정 2
+
 jar {
 	enabled = false
 }
@@ -63,6 +63,10 @@ dependencies {
 
 	implementation 'com.corundumstudio.socketio:netty-socketio:2.0.3'
 	implementation 'org.webjars:stomp-websocket:2.3.4'
+
+	// 추가 의존성
+	implementation 'org.springframework.boot:spring-boot-starter-aop' // AOP support
+	implementation 'org.springframework.boot:spring-boot-starter' // Core Spring Boot features
 }
 
 tasks.named('test') {
