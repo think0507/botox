@@ -15,7 +15,10 @@ import jakarta.servlet.http.HttpServletRequest;
 @Component
 public class CustomLoggerAspect {
 
-    @Around("execution(* com.botox.controller.RoomApiController.*(..))")
+    @Around(
+            "execution(* com.botox.controller.RoomApiController.leaveRoom(..)) || " +
+            "execution(* com.botox.controller.RoomApiController.joinRoom(..))"
+    )
     public Object logRoomActivity(ProceedingJoinPoint joinPoint) throws Throwable {
         Object[] args = joinPoint.getArgs();
         String methodName = joinPoint.getSignature().getName();
