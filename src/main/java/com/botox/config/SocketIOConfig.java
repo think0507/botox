@@ -41,10 +41,10 @@ public class SocketIOConfig {
         return server;
     }
 
-    @PreDestroy
-    public void stopSocketIOServer() {
-        if (server != null) {
-            server.stop(); // 애플리케이션 종료 시 서버를 명시적으로 종료
-        }
-    }
+//    @PreDestroy
+//    public void stopSocketIOServer() {
+//        if (server != null) {
+//            server.stop(); // 애플리케이션 종료 시 서버를 명시적으로 종료
+//        }
+//    }
 }
