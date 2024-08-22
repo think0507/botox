@@ -28,7 +28,6 @@ import java.util.stream.Collectors;
 @Slf4j
 @RestController
 @RequestMapping("/api/posts")
-@Slf4j
 public class PostController {
 
     @Autowired
