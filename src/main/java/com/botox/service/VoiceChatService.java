@@ -35,8 +35,17 @@ public class VoiceChatService {
             addClientToRoom(roomNum, client);
             System.out.println("User " + userId + " entered room " + roomNum);
 
-            // 방에 있는 다른 모든 사용자에게 새로 입장한 사용자 정보 전송
+            // 모든 클라이언트에게 "enter_room" 이벤트 전송
             Set<SocketIOClient> clientsInRoom = rooms.get(roomNum);
+            if (clientsInRoom != null) {
+                clientsInRoom
+                        .forEach(c -> c.sendEvent("enter_room", new HashMap<String, String>() {{
+                            put("userId", userId);
+                            put("roomNum", roomNum);
+                        }}));
+            }
+
+            // 방에 있는 다른 모든 사용자에게 새로 입장한 사용자 정보 전송
             if (clientsInRoom != null) {
                 clientsInRoom.stream()
                         .filter(c -> !c.equals(client)) // 자신 제외
@@ -45,12 +54,6 @@ public class VoiceChatService {
                             put("roomNum", roomNum);
                         }}));
             }
-
-            // 입장한 클라이언트에게만 "enter_room" 이벤트 전송
-            client.sendEvent("enter_room", new HashMap<String, String>() {{
-                put("userId", userId);
-                put("roomNum", roomNum);
-            }});
         });
 
         // "leave_room" 이벤트 처리
