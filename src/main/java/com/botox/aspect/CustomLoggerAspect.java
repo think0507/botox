@@ -17,8 +17,9 @@ import jakarta.servlet.http.HttpServletRequest;
 public class CustomLoggerAspect {
 
     @Around(
-            "execution(* com.botox.controller.RoomApiController.leaveRoom(..)) || " +
-                    "execution(* com.botox.controller.RoomApiController.joinRoom(..))"
+        "execution(* com.botox.controller.RoomApiController.leaveRoom(..)) || " +
+        "execution(* com.botox.controller.RoomApiController.joinRoom(..)) || " +
+        "execution(* com.botox.controller.RoomApiController.enterRoom(..))"
     )
     public Object logRoomActivity(ProceedingJoinPoint joinPoint) throws Throwable {
         Object[] args = joinPoint.getArgs();
@@ -27,22 +28,26 @@ public class CustomLoggerAspect {
 
         String action = getActionFromMethodName(methodName);
         Long roomNum = null;
+        String roomContent = null;
         Long userId = null;
 
-        // 파라미터에서 roomNum 및 userId 추출
         for (Object arg : args) {
             if (arg instanceof Long) {
                 if (roomNum == null) {
                     roomNum = (Long) arg;
                 }
+            } else if (arg instanceof String) {
+                roomContent = (String) arg;
             } else if (arg instanceof RoomApiController.LeaveRoomForm) {
                 userId = ((RoomApiController.LeaveRoomForm) arg).getUserId();
             } else if (arg instanceof RoomApiController.JoinRoomForm) {
                 userId = ((RoomApiController.JoinRoomForm) arg).getUserId();
+            } else if (arg instanceof RoomApiController.EnterRoomForm) {
+                userId = ((RoomApiController.EnterRoomForm) arg).getUserId();
             }
         }
 
-        RoomLogger.RoomLog(action, roomNum, null, userId, request);
+        RoomLogger.RoomLog(action, roomNum, roomContent, userId, request);
 
         return joinPoint.proceed();
     }
