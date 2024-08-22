@@ -1,5 +1,6 @@
 package com.botox.aspect;
 
+import com.botox.controller.RoomApiController;
 import com.botox.logger.RoomLogger;
 import com.botox.logger.PostLogger;
 import com.botox.logger.CommentLogger;
@@ -17,7 +18,7 @@ public class CustomLoggerAspect {
 
     @Around(
             "execution(* com.botox.controller.RoomApiController.leaveRoom(..)) || " +
-            "execution(* com.botox.controller.RoomApiController.joinRoom(..))"
+                    "execution(* com.botox.controller.RoomApiController.joinRoom(..))"
     )
     public Object logRoomActivity(ProceedingJoinPoint joinPoint) throws Throwable {
         Object[] args = joinPoint.getArgs();
@@ -26,19 +27,22 @@ public class CustomLoggerAspect {
 
         String action = getActionFromMethodName(methodName);
         Long roomNum = null;
-        String roomContent = null;
         Long userId = null;
 
+        // 파라미터에서 roomNum 및 userId 추출
         for (Object arg : args) {
             if (arg instanceof Long) {
-                if (roomNum == null) roomNum = (Long) arg;
-                else if (userId == null) userId = (Long) arg;
-            } else if (arg instanceof String) {
-                roomContent = (String) arg;
+                if (roomNum == null) {
+                    roomNum = (Long) arg;
+                }
+            } else if (arg instanceof RoomApiController.LeaveRoomForm) {
+                userId = ((RoomApiController.LeaveRoomForm) arg).getUserId();
+            } else if (arg instanceof RoomApiController.JoinRoomForm) {
+                userId = ((RoomApiController.JoinRoomForm) arg).getUserId();
             }
         }
 
-        RoomLogger.RoomLog(action, roomNum, roomContent, userId, request);
+        RoomLogger.RoomLog(action, roomNum, null, userId, request);
 
         return joinPoint.proceed();
     }
