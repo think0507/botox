@@ -141,6 +141,7 @@ public class RoomService {
 
                 // 새로운 방장을 참여자 명단에서 제거
                 room.getParticipants().removeIf(participant -> participant.getUser().getId().equals(newMaster.getId()));
+                room.setRoomUserCount(room.getRoomUserCount()-1);
             } else {
                 // 방에 참가자가 없으면 방 삭제
                 roomRepository.delete(room);
