@@ -63,8 +63,7 @@ public class SecurityConfig {
                 "http://d3ao949apmj1lo.cloudfront.net",
                 "https://botox-chat.site",
                 "https://www.botox-chat.site",
-                "http://localhost:3000",
-                "/ws/**" )); // 여러 도메인을 한 번에 설정
+                "http://localhost:3000")); // 여러 도메인을 한 번에 설정
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
