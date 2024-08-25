@@ -166,23 +166,34 @@ public class UserService implements UserDetailsService {
     }
 
     @Transactional
-    public ProfileDTO updateUserProfile(String username, String userProfile, String userNickname, String nickname) {
-        User user = userRepository.findByUsername(username).orElseThrow(() -> new RuntimeException("User not found"));
-        user.setUserProfile(userProfile);
-        user.setUserNickname(userNickname);
+    public UserDTO updateUserProfile(String username, String userProfile, String userNickname, MultipartFile file) throws Exception {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (userProfile != null) {
+            user.setUserProfile(userProfile);
+        }
+        if (userNickname != null) {
+            user.setUserNickname(userNickname);
+        }
+        if (file != null && !file.isEmpty()) {
+            String imageUrl = s3UploadService.uploadFile(file);
+            user.setUserProfilePic(imageUrl);
+        }
+
         User updatedUser = userRepository.save(user);
-        return convertToProfileDTO(updatedUser);
+        return convertToDTO(updatedUser);
     }
 
     @Transactional
-    public ProfileDTO updateProfileImage(String username, MultipartFile file) {
+    public UserDTO updateProfileImage(String username, MultipartFile file) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         try {
             String imageUrl = s3UploadService.uploadFile(file);
             user.setUserProfilePic(imageUrl);
             User updatedUser = userRepository.save(user);
-            return convertToProfileDTO(updatedUser);
+            return convertToDTO(updatedUser);
         } catch (Exception e) {
             throw new RuntimeException("Failed to update profile image", e);
         }
