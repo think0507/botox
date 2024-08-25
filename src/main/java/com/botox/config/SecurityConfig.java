@@ -4,8 +4,11 @@ import com.botox.config.jwt.TokenProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -60,7 +63,8 @@ public class SecurityConfig {
                 "http://d3ao949apmj1lo.cloudfront.net",
                 "https://botox-chat.site",
                 "https://www.botox-chat.site",
-                "http://localhost:3000")); // 여러 도메인을 한 번에 설정
+                "http://localhost:3000",
+                "/ws/**" )); // 여러 도메인을 한 번에 설정
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
@@ -86,4 +90,14 @@ public class SecurityConfig {
                 "/ws/**" // WebSocket 엔드포인트 허용
         ));
     }
+//    @Bean
+//    public WebSecurityCustomizer webSecurityCustomizer() {
+//        return (web) -> web.ignoring()
+//                .requestMatchers(HttpMethod.GET, "ws/**")
+//                .requestMatchers(HttpMethod.POST, "ws/**")
+//                .requestMatchers(HttpMethod.OPTIONS, "ws/**")
+//                .requestMatchers(HttpMethod.PUT, "ws/**");
+//
+//    }
+
 }

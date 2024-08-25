@@ -39,7 +39,7 @@ spring:
       password:
   jpa:
     hibernate:
-      ddl-auto: create
+      ddl-auto: update
     properties:
       hibernate:
         format_sql: true
@@ -51,6 +51,9 @@ logging:
     org.hibernate.type: trace
     org.springframework.orm.jpa: DEBUG
     org.springframework.transaction: DEBUG
+    org.springframework: DEBUG
+    org.springframework.security: DEBUG  # Spring Security 관련 디버그 로그 활성화
+    org.springframework.web.socket: DEBUG  # WebSocket 관련 디버그 로그 활성화
 
 jwt:
   issuer: kim11
