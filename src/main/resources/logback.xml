@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <!-- 콘솔 로그를 위한 어펜더 추가 -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%-5level %d{yyyy-MM-dd HH:mm:ss} [%thread] %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+
+    <!-- 방 입장/퇴장 로그를 위한 파일 어펜더 -->
+    <appender name="ROOM_ACTIVITY_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/room-activity.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>logs/room-activity.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>30</maxHistory>
+            <totalSizeCap>1GB</totalSizeCap>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%-5level %d{yyyy-MM-dd HH:mm:ss} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- 게시글 신고 로그를 위한 파일 어펜더 -->
+    <appender name="POST_REPORT_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/post-report.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>logs/post-report.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>30</maxHistory>
+            <totalSizeCap>1GB</totalSizeCap>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%-5level %d{yyyy-MM-dd HH:mm:ss} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- 댓글 신고 로그를 위한 파일 어펜더 -->
+    <appender name="COMMENT_REPORT_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/comment-report.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>logs/comment-report.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>30</maxHistory>
+            <totalSizeCap>1GB</totalSizeCap>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%-5level %d{yyyy-MM-dd HH:mm:ss} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- 기본 로그 설정 -->
+    <root level="INFO">
+        <appender-ref ref="CONSOLE" />
+    </root>
+
+    <!-- 방 입장/퇴장 로그 설정 -->
+    <logger name="com.botox.logger.RoomLogger" level="INFO" additivity="false">
+        <appender-ref ref="ROOM_ACTIVITY_FILE" />
+    </logger>
+
+    <!-- 게시글 신고 로그 설정 -->
+    <logger name="com.botox.logger.PostLogger" level="INFO" additivity="false">
+        <appender-ref ref="POST_REPORT_FILE" />
+    </logger>
+
+    <!-- 댓글 신고 로그 설정 -->
+    <logger name="com.botox.logger.CommentLogger" level="INFO" additivity="false">
+        <appender-ref ref="COMMENT_REPORT_FILE" />
+    </logger>
+
+</configuration>

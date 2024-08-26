@@ -6,8 +6,10 @@ import com.botox.domain.Report;
 import com.botox.constant.ReportType;
 import com.botox.domain.User;
 import com.botox.exception.NotFoundCommentException;
+import com.botox.logger.CommentLogger;
 import com.botox.service.CommentService;
 import com.botox.service.CommentReportService;
+import jakarta.servlet.http.HttpServletRequest;
 import com.botox.service.UserService;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -23,6 +25,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -127,29 +130,22 @@ public class CommentController {
 
     //댓글 신고 기능 구현
     @PostMapping("/comments/{commentId}/report")
-    public ResponseForm<ReportForm> reportComment(@PathVariable Long commentId, @RequestBody ReportForm reportForm) {
+    public ResponseForm<ReportForm> reportComment(@PathVariable Long commentId, @RequestBody ReportForm reportForm, HttpServletRequest request) {
         try {
-            // reportForm에 commentId를 설정합니다.
-            reportForm.setReportedContentId(commentId);
-            // CommentReportService를 사용하여 신고를 처리하고 결과를 ReportForm 객체로 반환받습니다.
             ReportForm reportedForm = commentReportService.reportComment(reportForm);
-
-            // 처리된 ReportForm 객체를 ResponseForm에 담아 클라이언트에게 HTTP 상태 코드와 함께 응답합니다.
             return new ResponseForm<>(HttpStatus.OK, reportedForm, "댓글 신고가 성공적으로 접수되었습니다.");
         } catch (Exception e) {
-            // 예기치 않은 오류가 발생할 경우 로그를 기록하고, INTERNAL_SERVER_ERROR 상태 코드와 함께 오류 메시지를 반환합니다.
-            log.error("Unexpected error", e);
-            return new ResponseForm<>(HttpStatus.INTERNAL_SERVER_ERROR, null, "Unexpected error occurred.");
+            return new ResponseForm<>(HttpStatus.INTERNAL_SERVER_ERROR, null, "An error occurred: " + e.getMessage());
         }
     }
-
     //댓글 좋아요 기능 구현
     @PostMapping("/comments/{commentId}/like")
-    public ResponseForm<CommentForm> likeComment(@PathVariable Long commentId) {
+    public ResponseForm<CommentForm> likeComment(@PathVariable Long commentId, @RequestBody Map<String, Long> requestBody) {
+        Long userId = requestBody.get("userId");
         try {
 
             // CommentService를 사용하여 댓글에 좋아요를 추가합니다.
-            Comment comment = commentService.likeComment(commentId);
+            Comment comment = commentService.likeComment(commentId,userId);
             // 좋아요가 추가된 댓글을 CommentForm 객체로 변환합니다.
             CommentForm likedCommentForm = convertToCommentForm(comment);
             // 변환된 CommentForm 객체를 ResponseForm에 담아 클라이언트에게 HTTP 상태 코드와 함께 응답합니다.
@@ -181,11 +177,12 @@ public class CommentController {
     @Builder
     @AllArgsConstructor
     public static class CommentForm {
-        private Long authorId;
-        private Long postId;
-        private String commentContent;
-        private Integer likesCount;
-        private Long commentId;
+        private Long userId; //새로 추가한 좋아요를 누른 유저의 ID
+        private Long authorId; // 댓글 작성자
+        private Long postId; //게시글의 ID
+        private String commentContent; //댓글 내용
+        private Integer likesCount; // 댓글의 좋아요 수
+        private Long commentId; //댓글의 ID
     }
 
     @Data

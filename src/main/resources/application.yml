@@ -14,6 +14,11 @@ spring:
       hibernate:
         format_sql: true
         default_batch_fetch_size: 100
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 10MB
+      max-request-size: 10MB
 
 jwt:
   issuer: kim11
@@ -26,13 +31,10 @@ spring:
     activate:
       on-profile: dev
   datasource:
-    url: jdbc:h2:mem:testdb
-    username: sa  # 기본 사용자 이름
-    password:     # 기본 비밀번호 (비워둠)
-  h2:
-    console:
-      enabled: true
-      path: /h2-console
+    url: jdbc:mysql://localhost:3306/botox
+    username: root
+    password: 12345678
+    driver-class-name: com.mysql.cj.jdbc.Driver
   data:
     redis:
       host: 0.0.0.0
@@ -41,14 +43,18 @@ spring:
       password:
   jpa:
     hibernate:
-      ddl-auto: create
+      ddl-auto: update
     properties:
       hibernate:
         format_sql: true
         default_batch_fetch_size: 100
 
+# 로깅 기능 구현
 logging:
+  config: classpath:logback.xml # Logback 설정 파일 경로 추가
   level:
+    test: warn
+    org.springframework: DEBUG
     org.hibernate.SQL: info
     org.hibernate.type: trace
     org.springframework.orm.jpa: DEBUG
@@ -57,6 +63,18 @@ logging:
 jwt:
   issuer: kim11
   secretKey: ff54dd1f64544befbeae0e43d1b9df54ff54dd1f64544befbeae0e43d1b9df54ff54dd1f64544befbeae0e43d1b9df54
+
+cloud:
+  aws:
+    credentials:
+      access-key: ${AWS_ACCESS_KEY_ID}
+      secret-key: ${AWS_SECRET_ACCESS_KEY}
+    region:
+      static: ap-northeast-2
+    s3:
+      bucket: botox-s3
+    stack:
+      auto: false
 
 ---
 #application-prod.yml
@@ -97,3 +115,14 @@ jwt:
   issuer: kim11
   secretKey: ff54dd1f64544befbeae0e43d1b9df54ff54dd1f64544befbeae0e43d1b9df54ff54dd1f64544befbeae0e43d1b9df54
 
+cloud:
+  aws:
+    credentials:
+      access-key: ${AWS_ACCESS_KEY_ID}
+      secret-key: ${AWS_SECRET_ACCESS_KEY}
+    region:
+      static: ap-northeast-2
+    s3:
+      bucket: botox-s3
+    stack:
+      auto: false

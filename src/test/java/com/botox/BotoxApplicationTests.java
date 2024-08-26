@@ -7,10 +7,5 @@ import org.springframework.test.context.ActiveProfiles;
 @SpringBootTest
 @ActiveProfiles("test")
 class BotoxApplicationTests {
-
-	@Test
-	void contextLoads() {
-	}
-
 }
 

@@ -12,7 +12,7 @@ java {
 		languageVersion = JavaLanguageVersion.of(17)
 	}
 }
-// 기본 jar 태스크를 비활성화하여 plain JAR 파일이 생성되지 않도록 설정 2
+
 jar {
 	enabled = false
 }
@@ -55,9 +55,19 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-websocket'
 	implementation 'org.kurento:kurento-client:6.14.0'
 	implementation 'com.google.code.gson:gson:2.8.9'
+
+	implementation 'org.springframework.cloud:spring-cloud-starter-aws:2.2.6.RELEASE'
+	implementation 'org.springframework.cloud:spring-cloud-aws-context:2.2.6.RELEASE'
+	implementation platform('com.amazonaws:aws-java-sdk-bom:1.11.1000')
+	implementation 'com.amazonaws:aws-java-sdk-s3'
+
 	implementation 'com.corundumstudio.socketio:netty-socketio:2.0.3'
-	// stomp
 	implementation 'org.webjars:stomp-websocket:2.3.4'
+
+	// 추가 의존성
+	implementation 'org.springframework.boot:spring-boot-starter-aop' // AOP support
+	implementation 'org.springframework.boot:spring-boot-starter' // Core Spring Boot features
+	implementation 'org.redisson:redisson:3.34.1' // Redisson 의존성 추가
 }
 
 tasks.named('test') {
