@@ -6,6 +6,7 @@ import com.botox.domain.ProfileDTO;
 import com.botox.domain.User;
 import com.botox.domain.*;
 import com.botox.exception.UnauthorizedException;
+import com.botox.service.S3UploadService;
 import com.botox.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -33,6 +34,7 @@ public class UserController {
     private final UserService userService;
     private final PasswordEncoder passwordEncoder;
     private final TokenProvider tokenProvider;
+    private final S3UploadService s3UploadService;
 
     @PostMapping("/signup")
     public ResponseForm<UserCreateForm> createUser(
@@ -153,28 +155,31 @@ public class UserController {
 
     // userProfile 수정 또는 생성
     @PutMapping("/{username}/profile")
-    public ResponseForm<ProfileDTO> updateUserProfile(
+    public ResponseForm<UserDTO> updateUserProfile(
             @PathVariable String username,
-            @RequestBody Map<String, String> updates) {
+            @RequestParam(required = false) String userProfile,
+            @RequestParam(required = false) String userNickname,
+            @RequestParam(required = false) MultipartFile file) {
         try {
-            String userProfile = updates.get("userProfile");
-            String userProfilePic = updates.get("userProfilePic");
-            String userNickname = updates.get("userNickname");
-            ProfileDTO updatedProfile = userService.updateUserProfile(username, userProfile, userProfilePic, userNickname);
-            return new ResponseForm<>(HttpStatus.OK, updatedProfile, "User profile updated successfully");
+            UserDTO updatedUser = userService.updateUserProfile(username, userProfile, userNickname, file);
+            return new ResponseForm<>(HttpStatus.OK, updatedUser, "User profile updated successfully");
         } catch (Exception e) {
             return new ResponseForm<>(HttpStatus.BAD_REQUEST, null, "Failed to update profile: " + e.getMessage());
         }
     }
 
     @PostMapping("/upload")
-    public ResponseForm uploadImage(@RequestParam("file") MultipartFile file,
-                                    @RequestParam(value = "userId", required = false) Long userId,
-                                    @RequestParam(value = "isProfileImage", defaultValue = "false") boolean isProfileImage) {
+    public ResponseForm<UserDTO> uploadImage(@RequestParam("file") MultipartFile file,
+                                             @RequestParam(value = "username", required = false) String username,
+                                             @RequestParam(value = "isProfileImage", defaultValue = "false") boolean isProfileImage) {
         try {
-            String imageUrl = userService.uploadImage(file, userId, isProfileImage);
-            String message = isProfileImage ? "프로필 이미지가 성공적으로 업로드되었습니다." : "이미지가 성공적으로 업로드되었습니다.";
-            return new ResponseForm<>(HttpStatus.OK, imageUrl, message);
+            if (isProfileImage && username != null) {
+                UserDTO updatedUser = userService.updateProfileImage(username, file);
+                return new ResponseForm<>(HttpStatus.OK, updatedUser, "프로필 이미지가 성공적으로 업로드되었습니다.");
+            } else {
+                String imageUrl = s3UploadService.uploadFile(file);
+                return new ResponseForm<>(HttpStatus.OK, null, "이미지가 성공적으로 업로드되었습니다.");
+            }
         } catch (Exception e) {
             return new ResponseForm<>(HttpStatus.INTERNAL_SERVER_ERROR, null, "Error uploading image: " + e.getMessage());
         }
