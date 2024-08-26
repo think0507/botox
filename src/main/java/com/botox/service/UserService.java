@@ -7,6 +7,8 @@ import com.botox.exception.UnauthorizedException;
 import com.botox.repository.UserRepository;
 import com.botox.config.jwt.TokenProvider;
 import lombok.RequiredArgsConstructor;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -20,6 +22,7 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
@@ -29,6 +32,7 @@ public class UserService implements UserDetailsService {
     private final PasswordEncoder passwordEncoder;
     private final RedisTemplate<String, Object> redisTemplate;
     private final S3UploadService s3UploadService;
+    private final RedissonClient redissonClient;
 
     public UserCreateForm createUser(UserCreateForm userCreateForm) {
         User newUser = new User();
@@ -243,40 +247,57 @@ public class UserService implements UserDetailsService {
     // 유저 온도 변경
     @Transactional
     public UserDTO updateUserTemperature(String token, String targetUsername, int temperatureChange) {
-        String actorUsername = getActorUsernameFromRedis(token);
-        if (actorUsername == null) {
-            throw new UnauthorizedException("인증되지 않은 사용자입니다.");
+        String lockKey = "lock:user_temperature:" + targetUsername;
+        RLock lock = redissonClient.getLock(lockKey);
+
+        try {
+            // 락 획득 시도 (최대 2초 대기, 5초 후 자동 해제)
+            if (lock.tryLock(2, 5, TimeUnit.SECONDS)) {
+                try {
+                    String actorUsername = getActorUsernameFromRedis(token);
+                    if (actorUsername == null) {
+                        throw new UnauthorizedException("인증되지 않은 사용자입니다.");
+                    }
+
+                    if (actorUsername.equals(targetUsername)) {
+                        throw new IllegalArgumentException("자신의 온도는 변경할 수 없습니다.");
+                    }
+
+                    User target = userRepository.findByUsername(targetUsername)
+                            .orElseThrow(() -> new RuntimeException("Target user not found"));
+
+                    int currentTemp = target.getUserTemperatureLevel() != null ? target.getUserTemperatureLevel() : 0;
+
+                    if ((currentTemp == 0 && temperatureChange < 0) || (currentTemp == 100 && temperatureChange > 0)) {
+                        throw new IllegalStateException("온도를 더 이상 " +
+                                (temperatureChange > 0 ? "올릴" : "내릴") + " 수 없습니다.");
+                    }
+
+                    // 날짜 별 온도 변경 redis 에 저장
+                    String redisKey = "user_temperature:" + actorUsername + ":" + targetUsername + ":" + LocalDate.now();
+                    Boolean canUpdate = redisTemplate.opsForValue().setIfAbsent(redisKey, "updated", Duration.ofDays(1));
+
+                    if (Boolean.FALSE.equals(canUpdate)) {
+                        throw new RuntimeException("이미 오늘 이 사용자의 온도를 변경했습니다.");
+                    }
+
+                    int newTemp = currentTemp + temperatureChange;
+                    newTemp = Math.max(0, Math.min(100, newTemp));
+
+                    target.setUserTemperatureLevel(newTemp);
+                    User updatedUser = userRepository.save(target);
+
+                    return convertToDTO(updatedUser);
+                } finally {
+                    lock.unlock();
+                }
+            } else {
+                throw new RuntimeException("온도 변경을 위한 락 획득에 실패했습니다.");
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("온도 변경 중 인터럽트가 발생했습니다.", e);
         }
-
-        if (actorUsername.equals(targetUsername)) {
-            throw new IllegalArgumentException("자신의 온도는 변경할 수 없습니다.");
-        }
-
-        User target = userRepository.findByUsername(targetUsername)
-                .orElseThrow(() -> new RuntimeException("Target user not found"));
-
-        int currentTemp = target.getUserTemperatureLevel() != null ? target.getUserTemperatureLevel() : 0;
-
-        if ((currentTemp == 0 && temperatureChange < 0) || (currentTemp == 100 && temperatureChange > 0)) {
-            throw new IllegalStateException("온도를 더 이상 " +
-                    (temperatureChange > 0 ? "올릴" : "내릴") + " 수 없습니다.");
-        }
-
-        // 날짜 별 온도 변경 redis 에 저장
-        String redisKey = "user_temperature:" + actorUsername + ":" + targetUsername + ":" + LocalDate.now();
-        Boolean canUpdate = redisTemplate.opsForValue().setIfAbsent(redisKey, "updated", Duration.ofDays(1));
-
-        if (Boolean.FALSE.equals(canUpdate)) {
-            throw new RuntimeException("이미 오늘 이 사용자의 온도를 변경했습니다.");
-        }
-
-        int newTemp = currentTemp + temperatureChange;
-        newTemp = Math.max(0, Math.min(100, newTemp));
-
-        target.setUserTemperatureLevel(newTemp);
-        User updatedUser = userRepository.save(target);
-
-        return convertToDTO(updatedUser);
     }
 
     // Redis 에서 토큰을 통해 사용자 이름 획득
