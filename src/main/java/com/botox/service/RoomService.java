@@ -11,6 +11,7 @@ import com.botox.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -118,6 +119,18 @@ public class RoomService {
         roomRepository.delete(room);
     }
 
+    //60초마다 비어있는 방 지우는 메서드
+    @Scheduled(fixedDelay = 60000) // 매 60초마다 실행
+    @Transactional
+    public void checkAndDeleteEmptyRooms() {
+        // UserCount가 0인 방을 찾는 쿼리를 실행합니다.
+        List<Room> emptyRooms = roomRepository.findRoomsByUserCount(0);
+
+        // 찾은 빈 방들을 삭제합니다.
+        for (Room room : emptyRooms) {
+            roomRepository.delete(room);
+        }
+    }
     // 방 나가기 기능
     @Transactional
     public void leaveRoom(Long roomNum, Long userId) {
