@@ -199,11 +199,6 @@ public class RoomService {
         }
     }
 
-    // 기존 방 입장 기능 (비밀번호 없이)
-    @Transactional
-    public void joinRoom(Long roomNum, Long userId) {
-        joinRoom(roomNum, userId, null);
-    }
 
     // 빠른 방 입장
     @Transactional
@@ -387,7 +382,7 @@ public class RoomService {
             throw new IllegalArgumentException("강퇴 권한이 없습니다.");
         }
 
-        User userToKick = userRepository.findById(userIdToKick)
+        userRepository.findById(userIdToKick)
                 .orElseThrow(() -> new NotFoundRoomException("해당 사용자를 찾을 수 없습니다: " + userIdToKick));
 
         // 해당 사용자가 방에 있는지 확인
