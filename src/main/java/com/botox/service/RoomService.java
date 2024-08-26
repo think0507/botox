@@ -124,7 +124,7 @@ public class RoomService {
     @Transactional
     public void checkAndDeleteEmptyRooms() {
         // UserCount가 0인 방을 찾는 쿼리를 실행합니다.
-        List<Room> emptyRooms = roomRepository.findRoomsByUserCount(0);
+        List<Room> emptyRooms = roomRepository.findRoomsByRoomUserCount(0);
 
         // 찾은 빈 방들을 삭제합니다.
         for (Room room : emptyRooms) {
