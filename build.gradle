@@ -67,6 +67,7 @@ dependencies {
 	// 추가 의존성
 	implementation 'org.springframework.boot:spring-boot-starter-aop' // AOP support
 	implementation 'org.springframework.boot:spring-boot-starter' // Core Spring Boot features
+	implementation 'org.redisson:redisson:3.34.1' // Redisson 의존성 추가
 }
 
 tasks.named('test') {
