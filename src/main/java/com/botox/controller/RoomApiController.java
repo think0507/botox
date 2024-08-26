@@ -285,13 +285,13 @@ public class RoomApiController {
     @Builder
     @AllArgsConstructor
     public static class RoomForm {
-        private Long roomNum;
-        private String roomTitle;
-        private String roomContent;
-        private String roomPassword;
-        private RoomType roomType;
-        private Long roomMasterId;
-        private RoomStatus roomStatus;
+        private Long roomNum; //방 번호
+        private String roomTitle; //방 제목
+        private String roomContent; //방 게임 종류
+        private String roomPassword; // 방 비밀번호
+        private RoomType roomType; // 방 타입
+        private Long roomMasterId; //방장
+        private RoomStatus roomStatus; // 잠금여부
         private Integer roomCapacityLimit;
         private Timestamp roomUpdateTime;
         private Timestamp roomCreateAt;

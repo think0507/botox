@@ -10,7 +10,7 @@ import java.util.Optional;
 public interface RoomRepository extends JpaRepository<Room,Long>, RoomRepositoryQuery{
     List<Room> findByRoomContent(String roomContent);
 
-
+    List<Room> findRoomsByUserCount(int roomUserCount);
     // 방 초대코드로 방 찾기
     Optional<Room> findByInviteCode(String inviteCode);
     Long getTotalUserCountByRoomContent(String roomContent); // 총 유저 수를 계산하는 메서드 추가

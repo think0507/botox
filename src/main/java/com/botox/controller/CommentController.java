@@ -67,7 +67,7 @@ public class CommentController {
     //여기서 List로 받는 이유는 여러 댓글을 출력하기 위함.
     public ResponseForm<List<CommentForm>> getCommentsByPostId(@PathVariable Long postId) {
         try {
-            // CommentForm 객체를 담을 리스트를 생성합니다.
+            // CommentForm 객체들을 위한 리스트를 생성합니다.
             List<CommentForm> commentForms = new ArrayList<>();
             // CommentService를 사용하여 postId에 해당하는 댓글들을 조회합니다.
             List<Comment> comments = commentService.getCommentsByPostId(postId);

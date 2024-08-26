@@ -11,6 +11,7 @@ import com.botox.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -118,6 +119,18 @@ public class RoomService {
         roomRepository.delete(room);
     }
 
+    //60초마다 비어있는 방 지우는 메서드
+    @Scheduled(fixedDelay = 60000) // 매 60초마다 실행
+    @Transactional
+    public void checkAndDeleteEmptyRooms() {
+        // UserCount가 0인 방을 찾는 쿼리를 실행합니다.
+        List<Room> emptyRooms = roomRepository.findRoomsByUserCount(0);
+
+        // 찾은 빈 방들을 삭제합니다.
+        for (Room room : emptyRooms) {
+            roomRepository.delete(room);
+        }
+    }
     // 방 나가기 기능
     @Transactional
     public void leaveRoom(Long roomNum, Long userId) {
@@ -199,11 +212,6 @@ public class RoomService {
         }
     }
 
-    // 기존 방 입장 기능 (비밀번호 없이)
-    @Transactional
-    public void joinRoom(Long roomNum, Long userId) {
-        joinRoom(roomNum, userId, null);
-    }
 
     // 빠른 방 입장
     @Transactional
@@ -387,7 +395,7 @@ public class RoomService {
             throw new IllegalArgumentException("강퇴 권한이 없습니다.");
         }
 
-        User userToKick = userRepository.findById(userIdToKick)
+        userRepository.findById(userIdToKick)
                 .orElseThrow(() -> new NotFoundRoomException("해당 사용자를 찾을 수 없습니다: " + userIdToKick));
 
         // 해당 사용자가 방에 있는지 확인
