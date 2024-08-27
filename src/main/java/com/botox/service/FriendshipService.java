@@ -14,7 +14,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -26,12 +25,12 @@ public class FriendshipService {
     private final FriendshipRequestRepository friendshipRequestRepository;
 
     public FriendshipRequestDTO sendFriendRequest(FriendshipRequestCreateRequest request) {
-        if (isAlreadyFriendsOrPending(request.getSenderId(), request.getReceiverId())) {
+        if (isAlreadyFriendsOrPending(request.getSenderNickname(), request.getReceiverNickname())) {
             throw new IllegalStateException("Friend request already sent or you are already friends");
         }
 
-        User sender = userRepository.findById(request.getSenderId()).orElseThrow(() -> new IllegalStateException("Sender not found"));
-        User receiver = userRepository.findById(request.getReceiverId()).orElseThrow(() -> new IllegalStateException("Receiver not found"));
+        User sender = userRepository.findByUserNickname(request.getSenderNickname()).orElseThrow(() -> new IllegalStateException("Sender not found"));
+        User receiver = userRepository.findByUserNickname(request.getReceiverNickname()).orElseThrow(() -> new IllegalStateException("Receiver not found"));
 
         FriendshipRequest friendshipRequest = new FriendshipRequest();
         friendshipRequest.setSender(sender);
@@ -44,24 +43,24 @@ public class FriendshipService {
         return convertToDTO(friendshipRequest);
     }
 
-    public boolean isAlreadyFriendsOrPending(Long senderId, Long receiverId) {
-        boolean alreadyFriends = isAlreadyFriends(senderId, receiverId);
-        boolean pendingRequest = friendshipRequestRepository.findBySenderIdAndReceiverIdAndStatus(senderId, receiverId, RequestStatus.PENDING).isPresent()
-                || friendshipRequestRepository.findBySenderIdAndReceiverIdAndStatus(receiverId, senderId, RequestStatus.PENDING).isPresent()
-                || friendshipRequestRepository.findBySenderIdAndReceiverIdAndStatus(senderId, receiverId, RequestStatus.ACCEPTED).isPresent()
-                || friendshipRequestRepository.findBySenderIdAndReceiverIdAndStatus(receiverId, senderId, RequestStatus.ACCEPTED).isPresent();
+    public boolean isAlreadyFriendsOrPending(String senderNickname, String receiverNickname) {
+        boolean alreadyFriends = isAlreadyFriends(senderNickname, receiverNickname);
+        boolean pendingRequest = friendshipRequestRepository.findBySender_UserNicknameAndReceiver_UserNicknameAndStatus(senderNickname, receiverNickname, RequestStatus.PENDING).isPresent()
+                || friendshipRequestRepository.findBySender_UserNicknameAndReceiver_UserNicknameAndStatus(receiverNickname, senderNickname, RequestStatus.PENDING).isPresent()
+                || friendshipRequestRepository.findBySender_UserNicknameAndReceiver_UserNicknameAndStatus(senderNickname, receiverNickname, RequestStatus.ACCEPTED).isPresent()
+                || friendshipRequestRepository.findBySender_UserNicknameAndReceiver_UserNicknameAndStatus(receiverNickname, senderNickname, RequestStatus.ACCEPTED).isPresent();
 
         return alreadyFriends || pendingRequest;
     }
 
-    public boolean isAlreadyFriends(Long senderId, Long receiverId) {
-        List<Friendship> friendships = friendshipRepository.findFriendshipBetweenUsers(senderId, receiverId);
+    public boolean isAlreadyFriends(String senderNickname, String receiverNickname) {
+        List<Friendship> friendships = friendshipRepository.findFriendshipBetweenUsers(senderNickname, receiverNickname);
         return !friendships.isEmpty();
     }
 
-    public List<FriendshipRequestDTO> getPendingFriendRequests(Long userId) {
-        List<FriendshipRequest> sentRequests = friendshipRequestRepository.findBySenderIdAndStatus(userId, RequestStatus.PENDING);
-        List<FriendshipRequest> receivedRequests = friendshipRequestRepository.findByReceiverIdAndStatus(userId, RequestStatus.PENDING);
+    public List<FriendshipRequestDTO> getPendingFriendRequests(String userNickname) {
+        List<FriendshipRequest> sentRequests = friendshipRequestRepository.findBySender_UserNicknameAndStatus(userNickname, RequestStatus.PENDING);
+        List<FriendshipRequest> receivedRequests = friendshipRequestRepository.findByReceiver_UserNicknameAndStatus(userNickname, RequestStatus.PENDING);
 
         List<FriendshipRequestDTO> pendingRequests = sentRequests.stream()
                 .map(this::convertToDTO)
@@ -94,23 +93,23 @@ public class FriendshipService {
         friendshipRequestRepository.save(friendshipRequest);
     }
 
-    public List<FriendshipRequestDTO> getFriends(Long userId) {
-        List<Friendship> friendships = friendshipRepository.findByAcceptedUserIdOrRequestedUserId(userId, userId);
+    public List<FriendshipRequestDTO> getFriends(String userNickname) {
+        List<Friendship> friendships = friendshipRepository.findByAcceptedUser_UserNicknameOrRequestedUser_UserNickname(userNickname, userNickname);
         return friendships.stream()
                 .map(this::convertToFriendshipDTO)
                 .collect(Collectors.toList());
     }
 
-    public void removeFriend(Long userId, Long friendId) {
-        List<Friendship> friendships = friendshipRepository.findFriendshipBetweenUsers(userId, friendId);
+    public void removeFriend(String userNickname, String friendNickname) {
+        List<Friendship> friendships = friendshipRepository.findFriendshipBetweenUsers(userNickname, friendNickname);
         friendshipRepository.deleteAll(friendships);
     }
 
     private FriendshipRequestDTO convertToDTO(FriendshipRequest friendshipRequest) {
         FriendshipRequestDTO dto = new FriendshipRequestDTO();
         dto.setRequestId(friendshipRequest.getRequestId());
-        dto.setSenderId(friendshipRequest.getSender().getId());
-        dto.setReceiverId(friendshipRequest.getReceiver().getId());
+        dto.setSenderNickname(friendshipRequest.getSender().getUserNickname());
+        dto.setReceiverNickname(friendshipRequest.getReceiver().getUserNickname());
         dto.setRequestTime(friendshipRequest.getRequestTime());
         dto.setStatus(friendshipRequest.getStatus());
         return dto;
@@ -119,8 +118,8 @@ public class FriendshipService {
     private FriendshipRequestDTO convertToFriendshipDTO(Friendship friendship) {
         FriendshipRequestDTO dto = new FriendshipRequestDTO();
         dto.setRequestId(friendship.getId());
-        dto.setSenderId(friendship.getRequestedUser().getId());
-        dto.setReceiverId(friendship.getAcceptedUser().getId());
+        dto.setSenderNickname(friendship.getRequestedUser().getUserNickname());
+        dto.setReceiverNickname(friendship.getAcceptedUser().getUserNickname());
         dto.setRequestTime(null);
         dto.setStatus(RequestStatus.ACCEPTED);
         return dto;

@@ -8,7 +8,11 @@ import lombok.Setter;
 import java.util.List;
 
 @Entity
-@Table(name = "users")
+@Table(name = "users", indexes = {
+        @Index(name = "idx_username", columnList = "username"),
+        @Index(name = "idx_user_nickname", columnList = "user_nickname"),
+        @Index(name = "idx_temperature_status", columnList = "user_temperature_level, status")
+})
 @Getter @Setter
 public class User {
     @Id
@@ -27,16 +31,14 @@ public class User {
     @Column(name = "user_temperature_level")
     private Integer userTemperatureLevel;
 
-
     @Column(name = "user_nickname", nullable = false, unique = true)
     private String userNickname;
 
     @Column(name = "user_password", nullable = false)
     private String password;
 
-
     @Enumerated(EnumType.STRING)
-    private UserStatus status; // enum: ONLINE, OFFLINE
+    private UserStatus status;
 
     @OneToMany(mappedBy = "sender")
     private List<Chat> sentChats;
@@ -51,4 +53,3 @@ public class User {
     @Column(name = "role")
     private UserRole role = UserRole.USER;
 }
-

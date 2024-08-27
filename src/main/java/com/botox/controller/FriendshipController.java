@@ -27,9 +27,9 @@ public class FriendshipController {
         }
     }
 
-    @GetMapping("/requests/{userId}")
-    public ResponseEntity<List<FriendshipRequestDTO>> getPendingFriendRequests(@PathVariable Long userId) {
-        List<FriendshipRequestDTO> pendingRequests = friendshipService.getPendingFriendRequests(userId);
+    @GetMapping("/requests/{userNickname}")
+    public ResponseEntity<List<FriendshipRequestDTO>> getPendingFriendRequests(@PathVariable String userNickname) {
+        List<FriendshipRequestDTO> pendingRequests = friendshipService.getPendingFriendRequests(userNickname);
         return new ResponseEntity<>(pendingRequests, HttpStatus.OK);
     }
 
@@ -45,19 +45,19 @@ public class FriendshipController {
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
-    @GetMapping("/{userId}")
-    public ResponseEntity<List<FriendshipRequestDTO>> getFriends(@PathVariable Long userId) {
-        List<FriendshipRequestDTO> friends = friendshipService.getFriends(userId);
+    @GetMapping("/{userNickname}")
+    public ResponseEntity<List<FriendshipRequestDTO>> getFriends(@PathVariable String userNickname) {
+        List<FriendshipRequestDTO> friends = friendshipService.getFriends(userNickname);
         return new ResponseEntity<>(friends, HttpStatus.OK);
     }
 
-    @DeleteMapping("/remove/{userId}/{friendId}")
-    public ResponseEntity<String> removeFriend(@PathVariable Long userId, @PathVariable Long friendId) {
-        if (!friendshipService.isAlreadyFriends(userId, friendId)) {
+    @DeleteMapping("/remove/{userNickname}/{friendNickname}")
+    public ResponseEntity<String> removeFriend(@PathVariable String userNickname, @PathVariable String friendNickname) {
+        if (!friendshipService.isAlreadyFriends(userNickname, friendNickname)) {
             return new ResponseEntity<>("Not friends", HttpStatus.BAD_REQUEST);
         }
 
-        friendshipService.removeFriend(userId, friendId);
+        friendshipService.removeFriend(userNickname, friendNickname);
         return new ResponseEntity<>("Friend removed successfully", HttpStatus.OK);
     }
 }

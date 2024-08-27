@@ -9,6 +9,9 @@ import com.botox.config.jwt.TokenProvider;
 import lombok.RequiredArgsConstructor;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -22,6 +25,9 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -33,8 +39,10 @@ public class UserService implements UserDetailsService {
     private final RedisTemplate<String, Object> redisTemplate;
     private final S3UploadService s3UploadService;
     private final RedissonClient redissonClient;
+    private final ConcurrentHashMap<String, ConcurrentLinkedQueue<String>> userRequestQueues = new ConcurrentHashMap<>();
 
-    public UserCreateForm createUser(UserCreateForm userCreateForm) {
+
+    public void createUser(UserCreateForm userCreateForm) {
         User newUser = new User();
         newUser.setUsername(userCreateForm.getUsername());
         newUser.setPassword(passwordEncoder.encode(userCreateForm.getPassword1()));
@@ -42,7 +50,6 @@ public class UserService implements UserDetailsService {
 
         validateDuplicateUser(newUser);
         userRepository.save(newUser);
-        return userCreateForm;
     }
 
     public boolean existsByUserNickname(String userNickname) {
@@ -146,26 +153,31 @@ public class UserService implements UserDetailsService {
         return tokenProvider.validateToken(token);
     }
 
-    private void updateUserStatus(String username, UserStatus status) {
-        Optional<User> userOptional = userRepository.findByUsername(username);
-        if (userOptional.isPresent()) {
-            User user = userOptional.get();
-            user.setStatus(status);
-            userRepository.save(user);
-        }
-    }
-
+    @Cacheable(value = "users", key = "#username")
+    @Transactional(readOnly = true)
     public Optional<UserDTO> getUserByUsername(String username) {
-        return userRepository.findByUsername(username).map(this::convertToDTO);
+        return userRepository.findByUsername(username)
+                .map(this::convertToDTO);
     }
 
+    @CachePut(value = "users", key = "#username")
+    public UserDTO updateUserStatus(String username, UserStatus status) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
+        user.setStatus(status);
+        User updatedUser = userRepository.save(user);
+        return convertToDTO(updatedUser);
+    }
+
+    @CacheEvict(value = "users", key = "#username")
     @Transactional
     public void deleteUser(String username) {
         userRepository.deleteByUsername(username);
     }
 
     public ProfileDTO getUserProfile(String username) {
-        User user = userRepository.findByUsername(username).orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
         return new ProfileDTO(username, user.getUserNickname(), user.getUserProfile(), user.getUserProfilePic());
     }
 
@@ -247,57 +259,90 @@ public class UserService implements UserDetailsService {
     // 유저 온도 변경
     @Transactional
     public UserDTO updateUserTemperature(String token, String targetUsername, int temperatureChange) {
+        String actorUsername = getActorUsernameFromRedis(token);
+        if (actorUsername == null) {
+            throw new UnauthorizedException("인증되지 않은 사용자입니다.");
+        }
+
+        String requestId = UUID.randomUUID().toString();
         String lockKey = "lock:user_temperature:" + targetUsername;
         RLock lock = redissonClient.getLock(lockKey);
+        String requestKey = "request:user_temperature:" + targetUsername + ":" + requestId;
+
+        // 사용자별 요청 큐에 현재 요청 추가
+        userRequestQueues.computeIfAbsent(targetUsername, k -> new ConcurrentLinkedQueue<>()).add(requestId);
 
         try {
-            // 락 획득 시도 (최대 2초 대기, 5초 후 자동 해제)
             if (lock.tryLock(2, 5, TimeUnit.SECONDS)) {
                 try {
-                    String actorUsername = getActorUsernameFromRedis(token);
-                    if (actorUsername == null) {
-                        throw new UnauthorizedException("인증되지 않은 사용자입니다.");
-                    }
-
-                    if (actorUsername.equals(targetUsername)) {
-                        throw new IllegalArgumentException("자신의 온도는 변경할 수 없습니다.");
-                    }
-
-                    User target = userRepository.findByUsername(targetUsername)
-                            .orElseThrow(() -> new RuntimeException("Target user not found"));
-
-                    int currentTemp = target.getUserTemperatureLevel() != null ? target.getUserTemperatureLevel() : 0;
-
-                    if ((currentTemp == 0 && temperatureChange < 0) || (currentTemp == 100 && temperatureChange > 0)) {
-                        throw new IllegalStateException("온도를 더 이상 " +
-                                (temperatureChange > 0 ? "올릴" : "내릴") + " 수 없습니다.");
-                    }
-
-                    // 날짜 별 온도 변경 redis 에 저장
-                    String redisKey = "user_temperature:" + actorUsername + ":" + targetUsername + ":" + LocalDate.now();
-                    Boolean canUpdate = redisTemplate.opsForValue().setIfAbsent(redisKey, "updated", Duration.ofDays(1));
-
-                    if (Boolean.FALSE.equals(canUpdate)) {
-                        throw new RuntimeException("이미 오늘 이 사용자의 온도를 변경했습니다.");
-                    }
-
-                    int newTemp = currentTemp + temperatureChange;
-                    newTemp = Math.max(0, Math.min(100, newTemp));
-
-                    target.setUserTemperatureLevel(newTemp);
-                    User updatedUser = userRepository.save(target);
-
-                    return convertToDTO(updatedUser);
+                    return performTemperatureUpdate(actorUsername, targetUsername, temperatureChange, requestKey);
                 } finally {
                     lock.unlock();
+                    // 요청 큐에서 현재 요청 제거
+                    userRequestQueues.get(targetUsername).remove(requestId);
                 }
             } else {
-                throw new RuntimeException("온도 변경을 위한 락 획득에 실패했습니다.");
+                return pollForResult(requestKey, targetUsername, requestId);
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new RuntimeException("온도 변경 중 인터럽트가 발생했습니다.", e);
         }
+    }
+    // 실제 온도 업데이트 수행
+    private UserDTO performTemperatureUpdate(String actorUsername, String targetUsername, int temperatureChange, String requestKey) {
+        if (actorUsername.equals(targetUsername)) {
+            throw new IllegalArgumentException("자신의 온도는 변경할 수 없습니다.");
+        }
+
+        User target = userRepository.findByUsername(targetUsername)
+                .orElseThrow(() -> new RuntimeException("Target user not found"));
+
+        int currentTemp = target.getUserTemperatureLevel() != null ? target.getUserTemperatureLevel() : 0;
+
+        if ((currentTemp == 0 && temperatureChange < 0) || (currentTemp == 100 && temperatureChange > 0)) {
+            throw new IllegalStateException("온도를 더 이상 " +
+                    (temperatureChange > 0 ? "올릴" : "내릴") + " 수 없습니다.");
+        }
+
+        String redisKey = "user_temperature:" + actorUsername + ":" + targetUsername + ":" + LocalDate.now();
+        Boolean canUpdate = redisTemplate.opsForValue().setIfAbsent(redisKey, "updated", Duration.ofDays(1));
+
+        if (Boolean.FALSE.equals(canUpdate)) {
+            throw new RuntimeException("이미 오늘 이 사용자의 온도를 변경했습니다.");
+        }
+
+        int newTemp = Math.max(0, Math.min(100, currentTemp + temperatureChange));
+        target.setUserTemperatureLevel(newTemp);
+        User updatedUser = userRepository.save(target);
+        UserDTO result = convertToDTO(updatedUser);
+
+        redisTemplate.opsForValue().set(requestKey, result, Duration.ofSeconds(5));
+
+        return result;
+    }
+
+    // 결과 폴링
+    private UserDTO pollForResult(String requestKey, String targetUsername, String requestId) throws InterruptedException {
+        ConcurrentLinkedQueue<String> userQueue = userRequestQueues.get(targetUsername);
+        // 최대 3초 동안 결과 대기
+
+        for (int i = 0; i < 3; i++) {
+            if (!userQueue.peek().equals(requestId)) {
+                // 현재 요청이 큐의 맨 앞에 있지 않으면 대기
+                Thread.sleep(1000);
+                continue;
+            }
+
+            UserDTO result = (UserDTO) redisTemplate.opsForValue().get(requestKey);
+            if (result != null) {
+                userQueue.remove(requestId);
+                return result;
+            }
+            Thread.sleep(1000);
+        }
+        userQueue.remove(requestId);
+        throw new RuntimeException("온도 변경 요청 처리 시간이 초과되었습니다.");
     }
 
     // Redis 에서 토큰을 통해 사용자 이름 획득
