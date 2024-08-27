@@ -162,6 +162,8 @@ public class CommentController {
     }
 
     // Comment 객체를 CommentForm 객체로 변환합니다.
+    //build 메서드는 빌더 패턴 구현할때 사용
+    //복잡한 객체를 생성할 때 객체의 생성 과정과 표현 방법을 분리하여, 더 유연하고 가독성 높은 코드로 객체를 생성할 수 있도록 도와줌.
 
     private CommentForm convertToCommentForm(Comment comment) {
         return CommentForm.builder()
@@ -170,7 +172,8 @@ public class CommentController {
                 .postId(comment.getPost().getPostId())
                 .likesCount(comment.getLikesCount())
                 .commentContent(comment.getCommentContent())
-                .build();
+                .userProfilePic(comment.getAuthor().getUserProfilePic())
+                .build(); //최종 객체 생성
     }
 
     @Data
@@ -183,6 +186,8 @@ public class CommentController {
         private String commentContent; //댓글 내용
         private Integer likesCount; // 댓글의 좋아요 수
         private Long commentId; //댓글의 ID
+        private String userProfilePic; // 사용자의 프로필 사진 URL
+
     }
 
     @Data

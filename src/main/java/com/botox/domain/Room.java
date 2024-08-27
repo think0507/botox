@@ -28,6 +28,7 @@ public class Room {
     @Column(name = "room_content", columnDefinition = "TEXT")
     private String roomContent;
 
+
     private Integer roomUserCount = 0;
 
     @Enumerated(EnumType.STRING)
