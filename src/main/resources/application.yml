@@ -33,7 +33,7 @@ spring:
   datasource:
     url: jdbc:mysql://localhost:3306/botox
     username: root
-    password: bmw-4096
+    password: 12345678
     driver-class-name: com.mysql.cj.jdbc.Driver
   data:
     redis:
@@ -48,8 +48,6 @@ spring:
       hibernate:
         format_sql: true
         default_batch_fetch_size: 100
-        dialect: org.hibernate.dialect.MySQL8Dialect
-
 
 # 로깅 기능 구현
 logging:
