@@ -68,7 +68,7 @@ public class RoomService {
         room.setRoomCreateAt(LocalDateTime.now());
 
         // 방에 있는 사용자의 수를 1로 설정 (방장 포함)
-        room.setRoomUserCount(1);
+        room.setUserCount(1);
 
         // 방장 추가
         room.getParticipants().add(new RoomParticipant(room, roomMaster, LocalDateTime.now()));
@@ -124,7 +124,9 @@ public class RoomService {
     @Transactional
     public void checkAndDeleteEmptyRooms() {
         // UserCount가 0인 방을 찾는 쿼리를 실행합니다.
+
         List<Room> emptyRooms = roomRepository.findByUserCount(0);
+
 
         // 찾은 빈 방들을 삭제합니다.
         for (Room room : emptyRooms) {
@@ -156,7 +158,7 @@ public class RoomService {
 
                 // 새로운 방장을 참여자 명단에서 제거
                 room.getParticipants().removeIf(participant -> participant.getUser().getId().equals(newMaster.getId()));
-                room.setRoomUserCount(room.getRoomUserCount()-1);
+                room.setUserCount(room.getUserCount()-1);
             } else {
                 // 방에 참가자가 없으면 방 삭제
                 roomRepository.delete(room);
@@ -164,9 +166,9 @@ public class RoomService {
             }
         } else {
             // 방장이 아닌 사용자가 나가는 경우
-            int userCount = room.getRoomUserCount() != null ? room.getRoomUserCount() : 0;
+            int userCount = room.getUserCount() != null ? room.getUserCount() : 0;
             if (userCount > 0) {
-                room.setRoomUserCount(userCount - 1);
+                room.setUserCount(userCount - 1);
             }
             room.getParticipants().removeIf(participant -> participant.getUser().getId().equals(userId));
         }
@@ -197,11 +199,11 @@ public class RoomService {
                 throw new IllegalArgumentException("잘못된 비밀번호입니다.");
             }
 
-            int userCount = room.getRoomUserCount() != null ? room.getRoomUserCount() : 0;
+            int userCount = room.getUserCount() != null ? room.getUserCount() : 0;
             if (userCount >= room.getRoomCapacityLimit()) {
                 throw new IllegalStateException("방의 최대 인원 수를 초과했습니다.");
             }
-            room.setRoomUserCount(userCount + 1);
+            room.setUserCount(userCount + 1);
 
             RoomParticipant participant = new RoomParticipant(room, user, LocalDateTime.now());
             room.getParticipants().add(participant);
@@ -240,8 +242,8 @@ public class RoomService {
             }
 
             // 방에 있는 사용자의 수를 증가시킵니다.
-            int userCount = selectedRoom.getRoomUserCount() != null ? selectedRoom.getRoomUserCount() : 0;
-            selectedRoom.setRoomUserCount(userCount + 1);
+            int userCount = selectedRoom.getUserCount() != null ? selectedRoom.getUserCount() : 0;
+            selectedRoom.setUserCount(userCount + 1);
 
             // 참여자 목록에 해당 user를 추가합니다.
             selectedRoom.getParticipants().add(new RoomParticipant());
@@ -267,8 +269,8 @@ public class RoomService {
                 .orElseThrow(() -> new NotFoundRoomException("사용자를 찾을 수 없습니다: " + userId));
 
         // 방에 있는 사용자의 수를 증가시킵니다.
-        int userCount = selectedRoom.getRoomUserCount() != null ? selectedRoom.getRoomUserCount() : 0;
-        selectedRoom.setRoomUserCount(userCount + 1);
+        int userCount = selectedRoom.getUserCount() != null ? selectedRoom.getUserCount() : 0;
+        selectedRoom.setUserCount(userCount + 1);
 
         // 참여자 목록에 해당 user를 추가합니다.
         selectedRoom.getParticipants().add(new RoomParticipant());
@@ -281,8 +283,8 @@ public class RoomService {
     private Room findAvailableRoom(String roomContent) {
         List<Room> availableRooms = roomRepository.findByRoomContent(roomContent).stream()
                 .filter(room -> room.getRoomPassword() == null) // 비밀번호가 없음
-                .filter(room -> room.getRoomUserCount() != null &&
-                        room.getRoomUserCount() < room.getRoomCapacityLimit())
+                .filter(room -> room.getUserCount() != null &&
+                        room.getUserCount() < room.getRoomCapacityLimit())
                 .collect(Collectors.toList());
 
         if (availableRooms.isEmpty()) {
@@ -333,12 +335,12 @@ public class RoomService {
         Room room = roomRepository.findByInviteCode(inviteCode)
                 .orElseThrow(() -> new NotFoundRoomException("유효하지 않은 초대 코드입니다."));
 
-        if (room.getRoomUserCount() >= room.getRoomCapacityLimit()) {
+        if (room.getUserCount() >= room.getRoomCapacityLimit()) {
             throw new IllegalStateException("방이 가득 찼습니다.");
         }
 
         // 방 인원 카운트 증가
-        room.setRoomUserCount(room.getRoomUserCount() + 1);
+        room.setUserCount(room.getUserCount() + 1);
         roomRepository.save(room);
 
         // 게스트용 JWT 생성
@@ -355,8 +357,8 @@ public class RoomService {
                 .orElseThrow(() -> new NotFoundRoomException("해당 방을 찾을 수 없습니다: " + roomNum));
 
         // 방 인원 수 감소
-        if (room.getRoomUserCount() > 0) {
-            room.setRoomUserCount(room.getRoomUserCount() - 1);
+        if (room.getUserCount() > 0) {
+            room.setUserCount(room.getUserCount() - 1);
         }
 
         // 방 정보 업데이트
@@ -410,7 +412,7 @@ public class RoomService {
 
         // 사용자 강퇴
         room.getParticipants().removeIf(participant -> participant.getUser().getId().equals(userIdToKick));
-        room.setRoomUserCount(room.getRoomUserCount() - 1);
+        room.setUserCount(room.getUserCount() - 1);
 
         roomRepository.save(room);
     }

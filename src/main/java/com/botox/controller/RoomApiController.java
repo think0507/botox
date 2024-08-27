@@ -270,7 +270,7 @@ public class RoomApiController {
                 .roomCapacityLimit(room.getRoomCapacityLimit())
                 .roomUpdateTime(Timestamp.valueOf(room.getRoomUpdateTime()))
                 .roomCreateAt(Timestamp.valueOf(room.getRoomCreateAt()))
-                .roomUserCount(room.getRoomUserCount())
+                .roomUserCount(room.getUserCount())
                 //.participantIds(room.getParticipants().stream().map(User::getId).collect(Collectors.toList()))
                 //원래 room.getparticipantIds()가 List<user>가 아니라 List<RoomParticipant>를 반환하기 때문임
                 //그래서 User 객체의 ID를 직접 가져오려면 RoomParticipant 객체를 통해 접근해야 함
