@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface FriendshipRequestRepository extends JpaRepository<FriendshipRequest, Long> {
-    List<FriendshipRequest> findBySenderIdAndStatus(Long senderId, RequestStatus status);
-    List<FriendshipRequest> findByReceiverIdAndStatus(Long receiverId, RequestStatus status);
-    Optional<FriendshipRequest> findBySenderIdAndReceiverIdAndStatus(Long senderId, Long receiverId, RequestStatus status);
+    List<FriendshipRequest> findBySender_UserNicknameAndStatus(String senderNickname, RequestStatus status);
+    List<FriendshipRequest> findByReceiver_UserNicknameAndStatus(String receiverNickname, RequestStatus status);
+    Optional<FriendshipRequest> findBySender_UserNicknameAndReceiver_UserNicknameAndStatus(String senderNickname, String receiverNickname, RequestStatus status);
 }

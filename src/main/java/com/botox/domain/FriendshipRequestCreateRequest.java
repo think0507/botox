@@ -4,6 +4,6 @@ import lombok.Data;
 
 @Data
 public class FriendshipRequestCreateRequest {
-    private Long senderId;
-    private Long receiverId;
+    private String senderNickname;
+    private String receiverNickname;
 }

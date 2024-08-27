@@ -17,11 +17,11 @@ public class FriendshipRequest {
     private Long requestId;
 
     @ManyToOne
-    @JoinColumn(name = "sender_id", referencedColumnName = "id")
+    @JoinColumn(name = "sender_nickname", referencedColumnName = "user_nickname")
     private User sender;
 
     @ManyToOne
-    @JoinColumn(name = "receiver_id", referencedColumnName = "id")
+    @JoinColumn(name = "receiver_nickname", referencedColumnName = "user_nickname")
     private User receiver;
 
     @Column(name = "request_time")

@@ -13,10 +13,10 @@ public class Friendship {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "accept_user_id", referencedColumnName = "id")
+    @JoinColumn(name = "accepted_user_nickname", referencedColumnName = "user_nickname")
     private User acceptedUser;
 
     @ManyToOne
-    @JoinColumn(name = "request_user_id", referencedColumnName = "id")
+    @JoinColumn(name = "requested_user_nickname", referencedColumnName = "user_nickname")
     private User requestedUser;
 }
